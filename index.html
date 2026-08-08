@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codyweb.com - Inicio</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0A2647">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
+  <script>
+    // Si no hay sesión activa, mandar al login
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) window.location.href = 'login.html';
+    })();
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsQR (LEER/ESCANEAR QR — funciona en todos los navegadores) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- html2canvas para descargar QR -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+
+<div class="toast-container" id="toastContainer"></div>
+
+
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+
+<aside class="sidebar" id="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-logo"><img src="img/escudo.png" alt="Escudo" width="140"></div>
+    <div class="sidebar-brand">
+      <div class="site-name">Codyweb.com</div>
+      <div class="site-sub">Sistema de Asistencia</div>
+    </div>
+  </div>
+
+  <div class="sidebar-colegio">
+    <p>U.E. Juana Azurduy de Padilla</p>
+    <span>Satélite Norte - Warnes</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Principal</div>
+
+    <div class="nav-item active" data-page="inicio" onclick="navTo('inicio', this)">
+      <span class="nav-icon">🏠</span> Inicio
+    </div>
+    <div class="nav-item" data-page="estudiantes" onclick="navTo('estudiantes', this)">
+      <span class="nav-icon">👨‍🎓</span> Estudiantes
+    </div>
+    <div class="nav-item" data-page="qr" onclick="navTo('qr', this)">
+      <span class="nav-icon">📱</span> QR
+    </div>
+    <div class="nav-item" data-page="escanear" onclick="navTo('escanear', this)">
+      <span class="nav-icon">📷</span> Escanear
+    </div>
+
+    <div class="nav-label">Registros</div>
+
+    <div class="nav-item" data-page="asistencias" onclick="navTo('asistencias', this)">
+      <span class="nav-icon">✅</span> Asistencias
+    </div>
+    <div class="nav-item" data-page="reportes" onclick="navTo('reportes', this)">
+      <span class="nav-icon">📊</span> Reportes
+    </div>
+
+    <div class="nav-label">Sistema</div>
+
+    <div class="nav-item" data-page="configuracion" onclick="navTo('configuracion', this)">
+      <span class="nav-icon">⚙️</span> Configuración
+    </div>
+    <div class="nav-item" onclick="confirmarCerrarSesion()">
+      <span class="nav-icon">🚪</span> Cerrar Sesión
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    Codyweb v1.0 &nbsp;·&nbsp; Gestión 2026
+  </div>
+</aside>
+
+
+<div class="main-wrapper">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <div>
+        <div class="topbar-title" id="topbarTitle">Inicio</div>
+        <div class="topbar-subtitle">U.E. Juana Azurduy de Padilla</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-clock" id="topbarClock">📅 -- / -- / ----&nbsp;&nbsp;&nbsp;🕐 --:--:--</div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:6px 12px;font-size:.83rem;font-weight:600;color:var(--navy-mid);">
+        👤 <span id="userNombreTopbar">Cargando…</span>
+      </div>
+      <button id="btnInstalarApp" onclick="instalarApp()" style="display:none;align-items:center;gap:6px;background:var(--gold);border:none;border-radius:9px;padding:8px 14px;font-size:.83rem;font-weight:700;color:var(--navy);cursor:pointer;">
+        📲 Instalar app
+      </button>
+    </div>
+  </header>
+
+ 
+  <main class="page-content">
+
+    
+    <section class="page active" id="page-inicio">
+
+      <div class="section-header">
+        <div>
+          <div class="section-title" style="border:none;padding:0;font-size:1.7rem;">
+            Bienvenido, Administrador
+          </div>
+          <p style="color:var(--text-muted);margin-top:4px;font-size:.9rem;">
+            Panel de control del sistema de asistencia estudiantil
+          </p>
+        </div>
+        <span class="topbar-page-indicator" id="fechaHoyBadge"></span>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+
+        <div class="kpi-card blue" onclick="navTo('estudiantes')" style="cursor:pointer;border-left:none;border-radius:14px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="background:rgba(255,255,255,.18);border-radius:12px;padding:12px;font-size:1.7rem;">🎓</div>
+            <div>
+              <div class="kpi-value" style="color:#fff;" id="kpi-total">—</div>
+              <div class="kpi-label" style="color:rgba(255,255,255,.75);">Estudiantes<br>registrados</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;color:rgba(255,255,255,.65);font-size:.78rem;display:flex;align-items:center;justify-content:space-between;">
+            Ver más <span>›</span>
+          </div>
+        </div>
+
+        <div class="kpi-card green" onclick="navTo('asistencias')" style="cursor:pointer;border-left:none;border-radius:14px;background:linear-gradient(135deg,#22C55E,#15803D);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="background:rgba(255,255,255,.18);border-radius:12px;padding:12px;font-size:1.7rem;">📋</div>
+            <div>
+              <div class="kpi-value" style="color:#fff;" id="kpi-presentes">—</div>
+              <div class="kpi-label" style="color:rgba(255,255,255,.75);">Asistencias hoy<br>(Presentes)</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;color:rgba(255,255,255,.65);font-size:.78rem;display:flex;align-items:center;justify-content:space-between;">
+            Ver más <span>›</span>
+          </div>
+        </div>
+
+        <div class="kpi-card" onclick="navTo('qr')" style="cursor:pointer;border-left:none;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#4C1D95);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="background:rgba(255,255,255,.18);border-radius:12px;padding:12px;font-size:1.7rem;">📲</div>
+            <div>
+              <div class="kpi-value" style="color:#fff;" id="kpi-qr">—</div>
+              <div class="kpi-label" style="color:rgba(255,255,255,.75);">QR<br>generados</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;color:rgba(255,255,255,.65);font-size:.78rem;display:flex;align-items:center;justify-content:space-between;">
+            Ver más <span>›</span>
+          </div>
+        </div>
+
+        <div class="kpi-card orange" onclick="navTo('reportes')" style="cursor:pointer;border-left:none;border-radius:14px;background:linear-gradient(135deg,#F59E0B,#D97706);">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="background:rgba(255,255,255,.18);border-radius:12px;padding:12px;font-size:1.7rem;">👥</div>
+            <div>
+              <div class="kpi-value" style="color:#fff;" id="kpi-cursos">—</div>
+              <div class="kpi-label" style="color:rgba(255,255,255,.75);">Cursos<br>activos</div>
+            </div>
+          </div>
+          <div style="margin-top:14px;color:rgba(255,255,255,.65);font-size:.78rem;display:flex;align-items:center;justify-content:space-between;">
+            Ver más <span>›</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Gráficas + Actividad -->
+      <div style="display:grid;grid-template-columns:1fr 1.2fr 340px;gap:20px;align-items:start;">
+
+        <!-- Dona -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🕐 Asistencias de hoy</span>
+          </div>
+          <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+            <div style="position:relative;width:180px;height:180px;">
+              <canvas id="chartDona" width="180" height="180"></canvas>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+                <span style="font-size:.8rem;color:var(--text-muted);">Total</span>
+                <span style="font-size:1.6rem;font-weight:800;color:var(--navy);" id="kpi-dona-total">—</span>
+              </div>
+            </div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:7px;" id="legendaDona"></div>
+            <a onclick="navTo('asistencias')" style="font-size:.8rem;color:var(--navy-mid);cursor:pointer;display:flex;align-items:center;gap:4px;margin-top:4px;">
+              Ver todas las asistencias <span>›</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Barras por curso -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📊 Asistencias por curso (hoy)</span>
+          </div>
+          <div class="card-body">
+            <canvas id="chartBarras" height="160"></canvas>
+            <a onclick="navTo('reportes')" style="font-size:.8rem;color:var(--navy-mid);cursor:pointer;display:flex;align-items:center;gap:4px;margin-top:14px;">
+              Ver reporte completo <span>›</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Actividad reciente -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Actividad reciente</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <ul class="activity-list" id="actividadReciente" style="padding:0 16px;">
+              <li class="activity-item" style="padding:14px 0;">
+                <div style="opacity:.4;text-align:center;width:100%;font-size:.85rem;">Cargando...</div>
+              </li>
+            </ul>
+            <div style="padding:12px 16px 14px;border-top:1px solid var(--border);">
+              <a onclick="navTo('asistencias')" style="font-size:.78rem;color:var(--navy-mid);cursor:pointer;">
+                Ver toda la actividad ›
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ──────────────────────────────────────────────────────
+         ESTUDIANTES
+    ─────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-estudiantes">
+      <div class="section-header">
+        <div class="section-title">Estudiantes <small>Gestión y registro</small></div>
+        <div class="toolbar">
+          <button class="btn btn-gold" onclick="abrirModalEstudiante()">＋ Nuevo estudiante</button>
+          <button class="btn btn-outline" onclick="abrirModalImportar()">📥 Importar Excel</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-body" style="padding:14px 18px;">
+          <div class="toolbar">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input class="form-control" type="text" placeholder="Buscar por nombre, código o CI…"
+                     id="buscarEstudiante" oninput="filtrarEstudiantes()">
+            </div>
+            <select class="form-control" id="filtroCurso" onchange="filtrarEstudiantes()" style="width:auto;min-width:180px;">
+              <option value="">Todos los cursos</option>
+            </select>
+            <select class="form-control" id="filtroEstado" onchange="filtrarEstudiantes()" style="width:auto;">
+              <option value="Activo">Activos</option>
+              <option value="Inactivo">Inactivos</option>
+              <option value="todos">Todos</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Lista de estudiantes</span>
+          <span class="badge badge-blue" id="totalEstLabel">0 estudiantes</span>
+        </div>
+        <div class="table-wrap">
+          <table id="tablaEstudiantes">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Código</th>
+                <th>Nombre completo</th>
+                <th>Curso</th>
+                <th>CI</th>
+                <th>Género</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="bodyEstudiantes">
+              <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──────────────────────────────────────────────────────
+         QR
+    ─────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-qr">
+      <div class="section-header">
+        <div class="section-title">Códigos QR <small>Permanentes por estudiante</small></div>
+        <div class="toolbar">
+          <select class="form-control" id="qrFiltroCurso" onchange="cargarQR()" style="min-width:180px;">
+            <option value="">Todos los cursos</option>
+          </select>
+          <input class="form-control" type="text" placeholder="Buscar estudiante…"
+                 id="qrBuscar" oninput="cargarQR()" style="min-width:200px;">
+        </div>
+      </div>
+      <div class="qr-grid" id="qrGrid">
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-state-icon">📱</div>
+          <h3>Selecciona un curso</h3>
+          <p>Los QR se generan automáticamente para cada estudiante</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──────────────────────────────────────────────────────
+         ESCANEAR
+    ─────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-escanear">
+      <div class="section-header">
+        <div class="section-title">Escanear QR <small>Registro de asistencia</small></div>
+        <div class="toolbar">
+          <button class="btn btn-primary" id="btnCamara" onclick="iniciarCamara()">📷 Activar cámara</button>
+          <button class="btn btn-outline" onclick="detenerCamara()">⏹ Detener</button>
+        </div>
+      </div>
+
+      <div class="scanner-layout">
+        <div>
+          <div class="scanner-viewport">
+            <video id="video-preview" autoplay playsinline muted></video>
+            <div class="scanner-overlay">
+              <div class="scan-frame"></div>
+            </div>
+            <div class="scanner-status" id="scannerStatus">Cámara inactiva — presiona "Activar cámara"</div>
+          </div>
+
+          <!-- Subir foto del QR -->
+          <div class="card" style="margin-top:18px;">
+            <div class="card-header"><span class="card-title">📸 Subir foto del QR</span></div>
+            <div class="card-body">
+              <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:10px;">
+                Toma una foto del QR con tu celular y súbela aquí — funciona sin internet seguro.
+              </p>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <input type="file" id="fotoQR" accept="image/*" capture="environment"
+                       style="display:none" onchange="leerFotoQR(event)">
+                <button class="btn btn-gold" onclick="document.getElementById('fotoQR').click()">
+                  📷 Tomar foto / Subir imagen
+                </button>
+                <span id="fotoQRStatus" style="font-size:.82rem;color:var(--text-muted);">Sin imagen</span>
+              </div>
+              <canvas id="canvasFotoQR" style="display:none;margin-top:10px;max-width:100%;border-radius:8px;"></canvas>
+            </div>
+          </div>
+
+          <!-- Manual fallback -->
+          <div class="card" style="margin-top:18px;">
+            <div class="card-header"><span class="card-title">🔤 Ingresar token manual</span></div>
+            <div class="card-body">
+              <div class="form-row" style="grid-template-columns:1fr auto;">
+                <input class="form-control" type="text" id="tokenManual"
+                       placeholder="Pega el token QR aquí…">
+                <button class="btn btn-gold" onclick="registrarManual()">Registrar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel resultado -->
+        <div>
+          <div class="scan-result-card">
+            <div class="scan-result-header">
+              <div class="scan-avatar" id="scanAvatar">?</div>
+              <div>
+                <div style="font-weight:700;font-size:1rem;" id="scanNombre">Sin escanear</div>
+                <div style="font-size:.78rem;color:var(--text-muted);" id="scanCurso">—</div>
+              </div>
+              <div id="scanBadge" style="margin-left:auto;"></div>
+            </div>
+            <div class="scan-result-body" id="scanResultBody">
+              <div class="empty-state" style="padding:30px 0;">
+                <div class="empty-state-icon">📷</div>
+                <p>Escanea un código QR para registrar asistencia</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Últimos escaneos del día -->
+          <div class="card" style="margin-top:18px;">
+            <div class="card-header"><span class="card-title">⏱ Últimos registros hoy</span></div>
+            <div class="card-body" style="padding:0;">
+              <ul class="activity-list" id="ultimosEscaneos" style="padding:0 16px;max-height:260px;overflow-y:auto;">
+                <li style="padding:16px;text-align:center;color:var(--text-muted);font-size:.84rem;">Sin registros aún</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──────────────────────────────────────────────────────
+         ASISTENCIAS
+    ─────────────────────────────────────────────────────────── -->
+    <!-- ASISTENCIAS -->
+    <section class="page" id="page-asistencias">
+      <div class="section-header">
+        <div class="section-title">Asistencias <small>Registro diario</small></div>
+        <div class="toolbar">
+          <input class="form-control" type="date" id="asistFecha" style="width:auto;">
+          <select class="form-control" id="asistCurso" style="min-width:180px;">
+            <option value="">Todos los cursos</option>
+          </select>
+          <select class="form-control" id="asistTurno" style="width:auto;">
+            <option value="">Todos los turnos</option>
+            <option value="Mañana">🌅 Mañana</option>
+            <option value="Tarde">🌆 Tarde</option>
+          </select>
+          <button class="btn btn-primary" onclick="cargarAsistencias()">🔍 Filtrar</button>
+          <button class="btn btn-success" onclick="exportarAsistencias()">📤 Exportar Excel</button>
+        </div>
+      </div>
+
+      <!-- Pestañas -->
+      <div style="display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid var(--border);">
+        <button class="btn btn-primary" id="tabDiario" onclick="switchTabAsist('diario')" style="border-radius:9px 9px 0 0;margin-bottom:-2px;">📋 Registro diario</button>
+        <button class="btn btn-outline" id="tabIndividual" onclick="switchTabAsist('individual')" style="border-radius:9px 9px 0 0;margin-bottom:-2px;">👤 Por estudiante</button>
+      </div>
+
+      <!-- TAB DIARIO -->
+      <div id="tabDiarioContent">
+        <div class="kpi-grid" id="resumenAsistencias" style="margin-bottom:18px;"></div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📋 Registro de asistencias</span>
+            <span class="badge badge-blue" id="totalAsistLabel">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table id="tablaAsistencias">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Curso</th>
+                  <th>Turno</th>
+                  <th>Fecha</th>
+                  <th>Hora entrada</th>
+                  <th>Estado</th>
+                  <th>Observación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="bodyAsistencias">
+                <tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text-muted);">Selecciona fecha y filtra</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB INDIVIDUAL -->
+      <div id="tabIndividualContent" style="display:none;">
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-body" style="padding:14px 18px;">
+            <div class="toolbar">
+              <select class="form-control" id="indEstudiante" style="min-width:220px;">
+                <option value="">Selecciona un estudiante...</option>
+              </select>
+              <select class="form-control" id="indMes" style="width:auto;">
+                <option value="1">Enero</option><option value="2">Febrero</option>
+                <option value="3">Marzo</option><option value="4">Abril</option>
+                <option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option>
+                <option value="9">Septiembre</option><option value="10">Octubre</option>
+                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <button class="btn btn-primary" onclick="cargarReporteIndividual()">🔍 Ver reporte</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen individual -->
+        <div class="kpi-grid" id="resumenIndividual" style="margin-bottom:18px;display:none;"></div>
+
+        <div class="card" id="cardReporteInd" style="display:none;">
+          <div class="card-header">
+            <span class="card-title" id="tituloReporteInd">Reporte individual</span>
+            <span class="badge badge-blue" id="totalIndLabel">0 días</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>Fecha</th><th>Hora entrada</th>
+                  <th>Estado</th><th>Observación</th>
+                </tr>
+              </thead>
+              <tbody id="bodyReporteInd">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ──────────────────────────────────────────────────────
+         REPORTES
+    ─────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-reportes">
+      <div class="section-header">
+        <div class="section-title">Reportes <small>Análisis mensual</small></div>
+        <div class="toolbar">
+          <select class="form-control" id="repMes" style="width:auto;">
+            <option value="1">Enero</option><option value="2">Febrero</option>
+            <option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option>
+            <option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+          <select class="form-control" id="repAnio" style="width:auto;">
+            <option>2026</option><option>2025</option><option>2024</option>
+          </select>
+          <select class="form-control" id="repCurso" style="min-width:180px;">
+            <option value="">Todos los cursos</option>
+          </select>
+          <button class="btn btn-primary" onclick="cargarReporte()">📊 Generar</button>
+          <button class="btn btn-success" onclick="exportarReporte()">📤 Exportar</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">📈 Tendencia mensual</span></div>
+          <div class="card-body"><canvas id="chartLinea" height="160"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">📊 Resumen por estado</span></div>
+          <div class="card-body"><canvas id="chartPie" height="160"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📋 Detalle por estudiante</span>
+          <span class="badge badge-blue" id="totalRepLabel">0</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Código</th><th>Nombre</th><th>Curso</th>
+                <th>Días reg.</th><th>Presentes</th><th>Tardanzas</th>
+                <th>Ausentes</th><th>% Asist.</th>
+              </tr>
+            </thead>
+            <tbody id="bodyReporte">
+              <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);">Genera un reporte para ver los datos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ──────────────────────────────────────────────────────
+         CONFIGURACIÓN
+    ─────────────────────────────────────────────────────────── -->
+    <section class="page" id="page-configuracion">
+      <div class="section-header">
+        <div class="section-title">Configuración <small>Parámetros del sistema</small></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🏫 Datos del colegio</span></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Nombre del colegio</label>
+              <input class="form-control" type="text" id="cfgNombreColegio" value="U.E. Juana Azurduy de Padilla" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sede</label>
+              <input class="form-control" type="text" id="cfgSede" value="Satélite Norte - Warnes" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Gestión escolar</label>
+              <input class="form-control" type="text" id="cfgGestion" value="2026">
+            </div>
+            <button class="btn btn-gold" onclick="guardarConfigColegio()">💾 Guardar cambios</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">⏰ Horarios</span></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label">Hora de entrada</label>
+              <input class="form-control" type="time" id="cfgHoraEntrada" value="08:00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tolerancia (puntual hasta)</label>
+              <input class="form-control" type="time" id="cfgHoraTolerancia" value="08:15">
+              <div class="form-hint">Después de esta hora se marca como "Tarde"</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Hora de salida</label>
+              <input class="form-control" type="time" id="cfgHoraSalida" value="12:30">
+            </div>
+            <button class="btn btn-gold" onclick="guardarHorarios()">💾 Guardar horarios</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
+          <div class="card-header"><span class="card-title">📚 Cursos registrados</span></div>
+          <div class="card-body">
+            <div class="toolbar" style="margin-bottom:14px;">
+              <button class="btn btn-primary btn-sm" onclick="abrirModalCurso()">＋ Nuevo curso</button>
+            </div>
+            <div class="table-wrap">
+              <table id="tablaCursos">
+                <thead>
+                  <tr><th>#</th><th>Nombre del curso</th><th>Nivel</th><th>Turno</th><th>Estudiantes</th></tr>
+                </thead>
+                <tbody id="bodyCursos">
+                  <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer style="background:var(--navy);color:rgba(255,255,255,.5);font-size:.75rem;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+    <span>© 2026 Codyweb.com - Sistema de Asistencia Estudiantil | U.E. Juana Azurduy de Padilla</span>
+    <span>Versión 1.0.0</span>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     MODALES
+══════════════════════════════════════════════════════════════ -->
+
+<!-- Modal Estudiante -->
+<div class="modal-overlay" id="modalEstudiante">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalEstTitulo">Nuevo estudiante</span>
+      <button class="modal-close" onclick="cerrarModal('modalEstudiante')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="estId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre *</label>
+          <input class="form-control" type="text" id="estNombre" placeholder="Ej: Ana María">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellido *</label>
+          <input class="form-control" type="text" id="estApellido" placeholder="Ej: Flores Mamani">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">CI / Carnet</label>
+          <input class="form-control" type="text" id="estCI" placeholder="Ej: 12345678">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Curso *</label>
+          <select class="form-control" id="estCurso"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Género</label>
+          <select class="form-control" id="estGenero">
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono tutor</label>
+          <input class="form-control" type="text" id="estTelefono" placeholder="Ej: 70000000">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email (opcional)</label>
+        <input class="form-control" type="email" id="estEmail" placeholder="correo@ejemplo.com">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalEstudiante')">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarEstudiante()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Importar Excel -->
+<div class="modal-overlay" id="modalImportar">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📥 Importar estudiantes desde Excel</span>
+      <button class="modal-close" onclick="cerrarModal('modalImportar')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('archivoExcel').click()"
+           ondrop="dropHandler(event)" ondragover="event.preventDefault();this.classList.add('dragover')"
+           ondragleave="this.classList.remove('dragover')">
+        <div class="dropzone-icon">📄</div>
+        <div class="dropzone-text">
+          <strong>Haz clic o arrastra tu archivo CSV</strong><br>
+          Guarda el Excel como CSV (UTF-8) antes de importar
+        </div>
+      </div>
+      <input type="file" id="archivoExcel" accept=".csv,.txt" style="display:none" onchange="previewImport(event)">
+
+      <div class="card" style="margin-top:14px;">
+        <div class="card-body" style="padding:14px;">
+          <p style="font-size:.82rem;font-weight:600;color:var(--navy);margin-bottom:8px;">📋 Formato requerido (columnas en orden):</p>
+          <div style="background:var(--surface);border-radius:8px;padding:10px;font-family:monospace;font-size:.78rem;color:var(--text-muted);">
+            Código, Nombre, Apellido, CI, Curso, Género<br>
+            EST-001, Ana, Flores, 12345, 1ro A Secundaria, F<br>
+            EST-002, Carlos, Quispe, 23456, 2do B Secundaria, M
+          </div>
+        </div>
+      </div>
+
+      <div id="importPreview" style="margin-top:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalImportar')">Cancelar</button>
+      <button class="btn btn-gold" id="btnImportar" onclick="importarExcel()" disabled>📥 Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Curso -->
+<div class="modal-overlay" id="modalCurso">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <span class="modal-title">Nuevo curso</span>
+      <button class="modal-close" onclick="cerrarModal('modalCurso')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre del curso *</label>
+        <input class="form-control" type="text" id="cursoNombre" placeholder="Ej: 3ro A Secundaria">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nivel</label>
+          <select class="form-control" id="cursoNivel">
+            <option>Inicial</option>
+            <option>Primaria</option>
+            <option selected>Secundaria</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Turno</label>
+          <select class="form-control" id="cursoTurno">
+            <option>Mañana</option>
+            <option>Tarde</option>
+            <option>Noche</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalCurso')">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarCurso()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Puente hacia Supabase -->
+<script src="api.js"></script>
+<script src="script.js"></script>
+<script>
+  // Mostrar el nombre real del profesor logueado
+  (async () => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (user) {
+      const { data: perfil } = await sb.from('perfiles').select('nombre').eq('id', user.id).maybeSingle();
+      document.getElementById('userNombreTopbar').textContent = perfil?.nombre || user.email;
+    }
+  })();
+
+  // Registrar Service Worker (PWA)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    });
+  }
+
+  // Botón "Instalar app"
+  let eventoInstalacion = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    eventoInstalacion = e;
+    const btn = document.getElementById('btnInstalarApp');
+    if (btn) btn.style.display = 'inline-flex';
+  });
+  function instalarApp() {
+    if (!eventoInstalacion) return;
+    eventoInstalacion.prompt();
+    eventoInstalacion.userChoice.then(() => {
+      eventoInstalacion = null;
+      const btn = document.getElementById('btnInstalarApp');
+      if (btn) btn.style.display = 'none';
+    });
+  }
+</script>
+</body>
+</html>
