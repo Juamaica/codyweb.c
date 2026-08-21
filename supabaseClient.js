@@ -3,8 +3,8 @@
 //  Conexión al proyecto de Supabase
 // ============================================================
 
-const SUPABASE_URL = 'https://buolqsrjqhuabbzdhppp.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1b2xxc3JqcWh1YWJiemRocHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMjI2NDUsImV4cCI6MjEwMTY5ODY0NX0.0WToArrsxUFOTn6uL1kQd5q5QBaheAbFsaHTXieasek';
+const SUPABASE_URL = 'sb_publishable_EDtHyo5q9g0lFVHf6S2uew_wC8Ndkip';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92cHJ1d2p0bHZwaHJ4dmdiYXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczMzQwNjQsImV4cCI6MjEwMjkxMDA2NH0.0xPF7gl9j1Ivm4RRCGf2Se4HTJ_peVDlu3XKDBnVmJY';
 
 // 'supabase' aquí es la librería cargada desde el CDN (ver index.html/login.html)
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
