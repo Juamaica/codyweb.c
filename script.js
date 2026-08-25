@@ -22,6 +22,24 @@ const App = {
 };
 
 /* ══════════════════════════════════════════════════════════════
+   RESPONSIVE — Tablas → tarjetas verticales en móvil
+   Lee los <th> de cada tabla y les pone data-label a cada <td>
+═══════════════════════════════════════════════════════════════ */
+function activarTablasResponsive() {
+  document.querySelectorAll('.table-wrap table').forEach(tabla => {
+    const headers = Array.from(tabla.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    tabla.querySelectorAll('tbody tr').forEach(tr => {
+      Array.from(tr.children).forEach((td, i) => {
+        if (headers[i]) td.setAttribute('data-label', headers[i]);
+        if (headers[i] && headers[i].toLowerCase().includes('accion')) {
+          td.classList.add('no-label');
+        }
+      });
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
    NAVEGACIÓN
 ═══════════════════════════════════════════════════════════════ */
 function navTo(pagina, el) {
@@ -324,6 +342,8 @@ function renderTablaEstudiantes(lista) {
       </td>
     </tr>
   `).join('');
+
+  activarTablasResponsive();
 }
 
 /* Abrir modal nuevo estudiante */
@@ -812,6 +832,8 @@ function renderTablaAsistencias(lista) {
       </td>
     </tr>
   `).join('');
+
+  activarTablasResponsive();
 }
 
 async function cambiarEstadoAsist(id, estado) {
@@ -884,6 +906,8 @@ function renderTablaReporte(data) {
         <td><span class="badge ${cls}">${pct}%</span></td>
       </tr>`;
   }).join('');
+
+  activarTablasResponsive();
 }
 
 function dibujarGraficasReporte(data) {
@@ -982,6 +1006,8 @@ async function cargarConfiguracion() {
       <td><span class="badge badge-blue">${c.total_estudiantes} estudiantes</span></td>
     </tr>
   `).join('') || `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">Sin cursos</td></tr>`;
+
+  activarTablasResponsive();
 }
 
 async function guardarConfigColegio() {
@@ -1129,12 +1155,6 @@ function confirmarCerrarSesion() {
   }
 }
 
-
-
-
-
-
-
 /* ══════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════ */
@@ -1240,4 +1260,6 @@ async function cargarReporteIndividual() {
       <td style="font-size:.8rem;color:var(--text-muted);">${a.observacion || '—'}</td>
     </tr>
   `).join('');
+
+  activarTablasResponsive();
 }
