@@ -491,7 +491,7 @@ function _etiquetaEstado(estado) {
  * filas cebra con bordes finos, fila de totales opcional, auto-filtro
  * y encabezado congelado.
  */
-function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEstado, totales }) {
+function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEstado, totales, filaAlerta, firmas }) {
   // Se agrega automáticamente una columna "N°" al inicio
   const cols = [{ header: 'N°', key: '_n', width: 6, center: true }, ...columnas];
   const totalCols = cols.length;
@@ -550,6 +550,7 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
   // ── Filas de datos ────────────────────────────────────────
   filas.forEach((fila, idxFila) => {
     const filaExcel = filaEncabezado + 1 + idxFila;
+    const enAlerta = typeof filaAlerta === 'function' && filaAlerta(fila);
     cols.forEach((col, i) => {
       const cell = ws.getCell(filaExcel, i + 1);
       const esColEstado = colEstado && col.key === colEstado;
@@ -563,7 +564,12 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
         right: { style: 'thin', color: { argb: _COLOR_BORDE } },
       };
       cell.font = { size: 10.5, color: { argb: 'FF2D3748' } };
-      if (idxFila % 2 === 0) {
+      if (enAlerta) {
+        // Fila completa en rojo pálido — estudiante en riesgo (ej. 3+ faltas)
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFBE3E3' } };
+        cell.border.left  = { style: 'thin', color: { argb: _COLOR_ROJO } };
+        cell.border.right = { style: 'thin', color: { argb: _COLOR_ROJO } };
+      } else if (idxFila % 2 === 0) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_CEBRA } };
       }
       if (col.key === '_n') {
@@ -571,6 +577,9 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
       }
       if (esColEstado) {
         cell.font = { bold: true, size: 10.5, color: { argb: _colorEstado(fila[col.key]) } };
+      }
+      if (enAlerta) {
+        cell.font = { ...cell.font, bold: true, color: { argb: cell.font.color?.argb || _COLOR_ROJO } };
       }
     });
     ws.getRow(filaExcel).height = 20;
@@ -606,6 +615,37 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
     });
     ws.getRow(filaTotal).height = 22;
+  }
+
+  // ── Bloque de firma y sello (validez oficial del documento) ──
+  if (firmas !== false) {
+    ultimaFila += 2;
+    const filaLineas = ultimaFila;
+    const mitad = Math.max(2, Math.floor(totalCols / 2));
+
+    // Línea para firma del docente (mitad izquierda)
+    ws.mergeCells(filaLineas, 1, filaLineas, mitad);
+    ws.getCell(filaLineas, 1).border = { bottom: { style: 'thin', color: { argb: 'FF444444' } } };
+
+    // Línea para Vº Bº Dirección (mitad derecha)
+    ws.mergeCells(filaLineas, mitad + 1, filaLineas, totalCols);
+    ws.getCell(filaLineas, mitad + 1).border = { bottom: { style: 'thin', color: { argb: 'FF444444' } } };
+
+    const filaEtiquetas = filaLineas + 1;
+    ws.mergeCells(filaEtiquetas, 1, filaEtiquetas, mitad);
+    const etqFirma = ws.getCell(filaEtiquetas, 1);
+    etqFirma.value = 'Firma y sello — Profesor(a) a cargo';
+    etqFirma.font = { size: 9, color: { argb: _COLOR_GRIS_TXT } };
+    etqFirma.alignment = { horizontal: 'center' };
+
+    ws.mergeCells(filaEtiquetas, mitad + 1, filaEtiquetas, totalCols);
+    const etqDir = ws.getCell(filaEtiquetas, mitad + 1);
+    etqDir.value = 'Vº Bº Dirección';
+    etqDir.font = { size: 9, color: { argb: _COLOR_GRIS_TXT } };
+    etqDir.alignment = { horizontal: 'center' };
+
+    ws.getRow(filaLineas).height = 34;
+    ultimaFila = filaEtiquetas;
   }
 
   // ── Pie de página con generación y numeración de página ──
@@ -717,7 +757,7 @@ async function exportarReporteCSV(mes, anio, cursoId) {
 
   _armarHojaProfesional(ws, {
     titulo: 'Reporte Mensual de Asistencia',
-    subtitulo: `Periodo: ${nombresMes[mes] || mes} ${anio}${cursoId ? ' — Curso filtrado' : ''}  ·  Total de estudiantes: ${filas.length}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
+    subtitulo: `Periodo: ${nombresMes[mes] || mes} ${anio}${cursoId ? ' — Curso filtrado' : ''}  ·  Total de estudiantes: ${filas.length}  ·  Generado: ${new Date().toLocaleString('es-BO')}  ·  🔴 Resaltado: 3+ faltas en el mes`,
     columnas: [
       { header: 'Código',       key: 'codigo',     width: 12, center: true },
       { header: 'Nombre',       key: 'nombre',     width: 18 },
@@ -737,6 +777,8 @@ async function exportarReporteCSV(mes, anio, cursoId) {
       { key: 'ausentes',     label: 'Total', value: sum('ausentes') },
       { key: 'justificados', label: 'Total', value: sum('justificados') },
     ],
+    // Resalta en rojo la fila completa del estudiante con 3 o más faltas — alerta para el director
+    filaAlerta: (f) => (f.ausentes || 0) >= 3,
   });
 
   await _descargarXLSX(wb, `reporte_${mes}-${anio}.xlsx`);
