@@ -450,15 +450,24 @@ async function importarExcelSupabase(file) {
    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 ═══════════════════════════════════════════════════════════════ */
 
-// Colores institucionales — cambia estos si tu colegio tiene otros
-const _COLOR_HEADER   = 'FF1F4E79'; // azul institucional
-const _COLOR_TEXTO_HD = 'FFFFFFFF'; // blanco
-const _COLOR_CEBRA    = 'FFF2F6FA'; // celeste muy claro
-const _COLOR_BORDE    = 'FFD9D9D9'; // gris claro
-const _COLOR_VERDE    = 'FF1E7A34'; // Presente
-const _COLOR_ROJO     = 'FFB00020'; // Ausente
-const _COLOR_AMBAR    = 'FFB8860B'; // Tarde
-const _COLOR_AZUL_J   = 'FF1F4E79'; // Justificado
+// Identidad del colegio — mismos datos que ya usas en el sidebar
+const _COLEGIO_NOMBRE = 'U.E. JUANA AZURDUY DE PADILLA';
+const _COLEGIO_SEDE   = 'Satélite Norte · Warnes';
+
+// Paleta institucional — alineada al sidebar navy/dorado de Codyweb
+const _COLOR_NAVY      = 'FF0A2647'; // navy del sidebar
+const _COLOR_NAVY_MED  = 'FF12395E'; // navy medio, encabezado de tabla
+const _COLOR_DORADO    = 'FFC9A227'; // dorado institucional (línea de acento)
+const _COLOR_DORADO_BG = 'FFFBF3DC'; // dorado muy claro, fondo fila de totales
+const _COLOR_TEXTO_HD  = 'FFFFFFFF'; // blanco
+const _COLOR_CEBRA     = 'FFF3F6FA'; // gris azulado muy claro
+const _COLOR_BORDE     = 'FFD9D9D9'; // gris claro
+const _COLOR_BORDE_MED = 'FFB9C2CC'; // gris medio, para separadores
+const _COLOR_GRIS_TXT  = 'FF667085'; // gris para subtítulos
+const _COLOR_VERDE     = 'FF1E7A34'; // Presente
+const _COLOR_ROJO      = 'FFB00020'; // Ausente / Falta
+const _COLOR_AMBAR     = 'FFB8860B'; // Tarde
+const _COLOR_AZUL_J    = 'FF3457A6'; // Justificado
 
 function _colorEstado(estado) {
   switch (estado) {
@@ -475,47 +484,77 @@ function _etiquetaEstado(estado) {
   return estado === 'Ausente' ? 'Falta' : estado;
 }
 
-// Arma la hoja con título, encabezado, filas cebra, bordes y auto-filtro
-function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEstado }) {
-  const totalCols = columnas.length;
+/**
+ * Arma una hoja con estilo de planilla institucional:
+ * membrete (colegio + sede), título del reporte con línea de acento dorada,
+ * subtítulo con metadatos, columna de numeración, encabezado navy,
+ * filas cebra con bordes finos, fila de totales opcional, auto-filtro
+ * y encabezado congelado.
+ */
+function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEstado, totales }) {
+  // Se agrega automáticamente una columna "N°" al inicio
+  const cols = [{ header: 'N°', key: '_n', width: 6, center: true }, ...columnas];
+  const totalCols = cols.length;
 
-  // Fila 1: título del colegio / reporte (combinada)
+  ws.properties.defaultRowHeight = 18;
+
+  // ── Membrete institucional ──────────────────────────────
   ws.mergeCells(1, 1, 1, totalCols);
-  const tituloCell = ws.getCell(1, 1);
-  tituloCell.value = titulo;
-  tituloCell.font = { bold: true, size: 14, color: { argb: _COLOR_HEADER } };
-  tituloCell.alignment = { horizontal: 'left', vertical: 'middle' };
-  ws.getRow(1).height = 26;
+  const nombreColegio = ws.getCell(1, 1);
+  nombreColegio.value = _COLEGIO_NOMBRE;
+  nombreColegio.font = { bold: true, size: 13, color: { argb: _COLOR_NAVY }, name: 'Calibri' };
+  nombreColegio.alignment = { horizontal: 'left', vertical: 'middle' };
+  ws.getRow(1).height = 22;
 
-  // Fila 2: subtítulo (fecha, curso, mes, etc.)
-  if (subtitulo) {
-    ws.mergeCells(2, 1, 2, totalCols);
-    const subCell = ws.getCell(2, 1);
-    subCell.value = subtitulo;
-    subCell.font = { italic: true, size: 10, color: { argb: 'FF666666' } };
-    ws.getRow(2).height = 18;
+  ws.mergeCells(2, 1, 2, totalCols);
+  const sedeCell = ws.getCell(2, 1);
+  sedeCell.value = `${_COLEGIO_SEDE}  ·  Sistema de Asistencia Estudiantil — Codyweb.com`;
+  sedeCell.font = { italic: true, size: 9.5, color: { argb: _COLOR_GRIS_TXT } };
+  ws.getRow(2).height = 16;
+
+  // Línea de acento dorada bajo el membrete
+  for (let c = 1; c <= totalCols; c++) {
+    ws.getCell(3, c).border = { bottom: { style: 'medium', color: { argb: _COLOR_DORADO } } };
   }
+  ws.getRow(3).height = 4;
 
-  const filaEncabezado = subtitulo ? 3 : 2;
+  // ── Título del reporte ───────────────────────────────────
+  ws.mergeCells(4, 1, 4, totalCols);
+  const tituloCell = ws.getCell(4, 1);
+  tituloCell.value = titulo;
+  tituloCell.font = { bold: true, size: 15, color: { argb: _COLOR_NAVY } };
+  tituloCell.alignment = { horizontal: 'left', vertical: 'middle' };
+  ws.getRow(4).height = 26;
 
-  // Encabezados de columnas
-  columnas.forEach((col, i) => {
+  // ── Subtítulo con metadatos ──────────────────────────────
+  ws.mergeCells(5, 1, 5, totalCols);
+  const subCell = ws.getCell(5, 1);
+  subCell.value = subtitulo || '';
+  subCell.font = { italic: true, size: 10, color: { argb: _COLOR_GRIS_TXT } };
+  ws.getRow(5).height = 18;
+
+  const filaEncabezado = 6;
+
+  // ── Encabezado de columnas ───────────────────────────────
+  cols.forEach((col, i) => {
     const cell = ws.getCell(filaEncabezado, i + 1);
     cell.value = col.header;
-    cell.font = { bold: true, color: { argb: _COLOR_TEXTO_HD }, size: 11 };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_HEADER } };
+    cell.font = { bold: true, color: { argb: _COLOR_TEXTO_HD }, size: 10.5 };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_NAVY_MED } };
     cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    cell.border = { bottom: { style: 'medium', color: { argb: _COLOR_DORADO } } };
     ws.getColumn(i + 1).width = col.width || 16;
   });
-  ws.getRow(filaEncabezado).height = 24;
+  ws.getRow(filaEncabezado).height = 26;
 
-  // Filas de datos
+  // ── Filas de datos ────────────────────────────────────────
   filas.forEach((fila, idxFila) => {
     const filaExcel = filaEncabezado + 1 + idxFila;
-    columnas.forEach((col, i) => {
+    cols.forEach((col, i) => {
       const cell = ws.getCell(filaExcel, i + 1);
       const esColEstado = colEstado && col.key === colEstado;
-      cell.value = esColEstado ? _etiquetaEstado(fila[col.key]) : (fila[col.key] ?? '');
+      const valor = col.key === '_n' ? idxFila + 1 : (esColEstado ? _etiquetaEstado(fila[col.key]) : (fila[col.key] ?? ''));
+      cell.value = valor;
       cell.alignment = { vertical: 'middle', horizontal: col.center ? 'center' : 'left' };
       cell.border = {
         top: { style: 'thin', color: { argb: _COLOR_BORDE } },
@@ -523,22 +562,69 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
         left: { style: 'thin', color: { argb: _COLOR_BORDE } },
         right: { style: 'thin', color: { argb: _COLOR_BORDE } },
       };
+      cell.font = { size: 10.5, color: { argb: 'FF2D3748' } };
       if (idxFila % 2 === 0) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_CEBRA } };
       }
+      if (col.key === '_n') {
+        cell.font = { size: 10, color: { argb: _COLOR_GRIS_TXT } };
+      }
       if (esColEstado) {
-        cell.font = { bold: true, color: { argb: _colorEstado(fila[col.key]) } };
+        cell.font = { bold: true, size: 10.5, color: { argb: _colorEstado(fila[col.key]) } };
       }
     });
+    ws.getRow(filaExcel).height = 20;
   });
 
-  // Auto-filtro y encabezado congelado
-  const ultimaFila = filaEncabezado + filas.length;
+  let ultimaFila = filaEncabezado + filas.length;
+
+  // ── Fila de totales (opcional) ───────────────────────────
+  if (totales && totales.length) {
+    ultimaFila += 1;
+    const filaTotal = ultimaFila;
+    ws.mergeCells(filaTotal, 1, filaTotal, 2);
+    const etiquetaTotal = ws.getCell(filaTotal, 1);
+    etiquetaTotal.value = 'TOTALES';
+    etiquetaTotal.font = { bold: true, size: 10.5, color: { argb: _COLOR_NAVY } };
+    etiquetaTotal.alignment = { horizontal: 'left', vertical: 'middle' };
+
+    for (let c = 1; c <= totalCols; c++) {
+      const cell = ws.getCell(filaTotal, c);
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_DORADO_BG } };
+      cell.border = {
+        top: { style: 'medium', color: { argb: _COLOR_DORADO } },
+        bottom: { style: 'thin', color: { argb: _COLOR_BORDE_MED } },
+      };
+    }
+
+    totales.forEach(t => {
+      const colIdx = cols.findIndex(c => c.key === t.key);
+      if (colIdx === -1) return;
+      const cell = ws.getCell(filaTotal, colIdx + 1);
+      cell.value = t.label ? `${t.label}: ${t.value}` : t.value;
+      cell.font = { bold: true, size: 10.5, color: { argb: _COLOR_NAVY } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+    ws.getRow(filaTotal).height = 22;
+  }
+
+  // ── Pie de página con generación y numeración de página ──
+  ultimaFila += 2;
+  ws.mergeCells(ultimaFila, 1, ultimaFila, totalCols);
+  const pie = ws.getCell(ultimaFila, 1);
+  pie.value = 'Documento generado automáticamente por Codyweb — Sistema de Asistencia Estudiantil';
+  pie.font = { italic: true, size: 8.5, color: { argb: _COLOR_GRIS_TXT } };
+
+  // ── Auto-filtro y encabezado congelado ───────────────────
   ws.autoFilter = {
     from: { row: filaEncabezado, column: 1 },
     to: { row: filaEncabezado, column: totalCols },
   };
   ws.views = [{ state: 'frozen', ySplit: filaEncabezado }];
+
+  // ── Configuración de impresión ───────────────────────────
+  ws.pageSetup.printTitlesRow = `${filaEncabezado}:${filaEncabezado}`;
+  ws.headerFooter.oddFooter = '&L&8Codyweb.com&C&8Página &P de &N&R&8U.E. Juana Azurduy de Padilla';
 
   return ultimaFila;
 }
@@ -567,13 +653,19 @@ async function exportarAsistenciasCSV(fecha, cursoId) {
     estado: a.estado, obs: a.observacion || '',
   }));
 
+  const conteo = { Presente: 0, Tarde: 0, Ausente: 0, Justificado: 0 };
+  filas.forEach(f => { if (conteo[f.estado] !== undefined) conteo[f.estado]++; });
+
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Codyweb';
-  const ws = wb.addWorksheet('Asistencias', { pageSetup: { orientation: 'landscape', fitToPage: true } });
+  const ws = wb.addWorksheet('Asistencias', {
+    pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } },
+  });
 
   _armarHojaProfesional(ws, {
     titulo: 'Reporte de Asistencias',
-    subtitulo: `Fecha: ${fecha || 'todas'}${cursoId ? ' — Curso filtrado' : ''}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
+    subtitulo: `Fecha: ${fecha || 'todas'}${cursoId ? ' — Curso filtrado' : ''}  ·  Total de registros: ${filas.length}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
     columnas: [
       { header: 'Código',      key: 'codigo',  width: 12, center: true },
       { header: 'Nombre',      key: 'nombre',  width: 18 },
@@ -587,6 +679,12 @@ async function exportarAsistenciasCSV(fecha, cursoId) {
     ],
     filas,
     colEstado: 'estado',
+    totales: [
+      { key: 'entrada', label: 'Presentes', value: conteo.Presente },
+      { key: 'salida',  label: 'Tardanzas', value: conteo.Tarde },
+      { key: 'estado',  label: 'Faltas',    value: conteo.Ausente },
+      { key: 'obs',     label: 'Justif.',   value: conteo.Justificado },
+    ],
   });
 
   await _descargarXLSX(wb, `asistencias_${fecha || 'reporte'}.xlsx`);
@@ -597,31 +695,48 @@ async function exportarReporteCSV(mes, anio, cursoId) {
   if (cursoId) params.set('curso_id', cursoId);
   const res = await get('listar.php?' + params.toString());
 
-  const filas = (res.data || []).map(e => ({
-    codigo: e.codigo, nombre: e.nombre, apellido: e.apellido, curso: e.curso,
-    dias: e.dias_registrados, presentes: e.presentes, tardanzas: e.tardanzas,
-    ausentes: e.ausentes, justificados: e.justificados,
-  }));
+  const nombresMes = ['', 'Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  const filas = (res.data || []).map(e => {
+    const pct = e.dias_registrados > 0 ? Math.round((e.presentes / e.dias_registrados) * 100) : 0;
+    return {
+      codigo: e.codigo, nombre: e.nombre, apellido: e.apellido, curso: e.curso,
+      dias: e.dias_registrados, presentes: e.presentes, tardanzas: e.tardanzas,
+      ausentes: e.ausentes, justificados: e.justificados, pct: `${pct}%`,
+    };
+  });
+
+  const sum = (k) => filas.reduce((acc, f) => acc + (f[k] || 0), 0);
 
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Codyweb';
-  const ws = wb.addWorksheet('Reporte mensual', { pageSetup: { orientation: 'landscape', fitToPage: true } });
+  const ws = wb.addWorksheet('Reporte mensual', {
+    pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } },
+  });
 
   _armarHojaProfesional(ws, {
     titulo: 'Reporte Mensual de Asistencia',
-    subtitulo: `Periodo: ${mes}/${anio}${cursoId ? ' — Curso filtrado' : ''}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
+    subtitulo: `Periodo: ${nombresMes[mes] || mes} ${anio}${cursoId ? ' — Curso filtrado' : ''}  ·  Total de estudiantes: ${filas.length}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
     columnas: [
       { header: 'Código',       key: 'codigo',     width: 12, center: true },
       { header: 'Nombre',       key: 'nombre',     width: 18 },
       { header: 'Apellido',     key: 'apellido',   width: 18 },
       { header: 'Curso',        key: 'curso',      width: 14, center: true },
-      { header: 'Días reg.',    key: 'dias',       width: 12, center: true },
-      { header: 'Presentes',    key: 'presentes',  width: 12, center: true },
-      { header: 'Tardanzas',    key: 'tardanzas',  width: 12, center: true },
-      { header: 'Ausentes',     key: 'ausentes',   width: 12, center: true },
-      { header: 'Justificados', key: 'justificados', width: 13, center: true },
+      { header: 'Días reg.',    key: 'dias',       width: 11, center: true },
+      { header: 'Presentes',    key: 'presentes',  width: 11, center: true },
+      { header: 'Tardanzas',    key: 'tardanzas',  width: 11, center: true },
+      { header: 'Faltas',       key: 'ausentes',   width: 11, center: true },
+      { header: 'Justificados', key: 'justificados', width: 12, center: true },
+      { header: '% Asistencia', key: 'pct',        width: 13, center: true },
     ],
     filas,
+    totales: [
+      { key: 'presentes',    label: 'Total', value: sum('presentes') },
+      { key: 'tardanzas',    label: 'Total', value: sum('tardanzas') },
+      { key: 'ausentes',     label: 'Total', value: sum('ausentes') },
+      { key: 'justificados', label: 'Total', value: sum('justificados') },
+    ],
   });
 
   await _descargarXLSX(wb, `reporte_${mes}-${anio}.xlsx`);
