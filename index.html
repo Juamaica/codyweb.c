@@ -440,6 +440,7 @@
           </select>
           <button class="btn btn-primary" onclick="cargarAsistencias()">🔍 Filtrar</button>
           <button class="btn btn-success" onclick="exportarAsistencias()">📤 Exportar Excel</button>
+          <button class="btn btn-outline" onclick="abrirModalLicencia()">📄 Registrar licencia</button>
         </div>
       </div>
 
@@ -794,6 +795,45 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrarModal('modalCurso')">Cancelar</button>
       <button class="btn btn-gold" onclick="guardarCurso()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Licencia -->
+<div class="modal-overlay" id="modalLicencia">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📄 Registrar licencia</span>
+      <button class="modal-close" onclick="cerrarModal('modalLicencia')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Estudiante *</label>
+        <select class="form-control" id="licEstudiante"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha inicio *</label>
+          <input class="form-control" type="date" id="licFechaInicio">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha fin *</label>
+          <input class="form-control" type="date" id="licFechaFin">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Motivo *</label>
+        <textarea class="form-control" id="licMotivo" rows="3" placeholder="Ej: Reposo médico por gripe"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Archivo adjunto (certificado, etc.)</label>
+        <input class="form-control" type="file" id="licArchivo" accept="image/*,.pdf">
+        <div class="form-hint">Opcional, pero recomendado</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalLicencia')">Cancelar</button>
+      <button class="btn btn-gold" id="btnGuardarLicencia" onclick="guardarLicencia()">💾 Guardar licencia</button>
     </div>
   </div>
 </div>
