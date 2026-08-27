@@ -333,6 +333,75 @@ async function post(url, data) {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   LICENCIAS (justificaciones de falta)
+═══════════════════════════════════════════════════════════════ */
+
+// Genera un array de fechas 'YYYY-MM-DD' entre inicio y fin (inclusive)
+function _rangoFechas(inicio, fin) {
+  const fechas = [];
+  let actual = new Date(inicio + 'T00:00:00');
+  const final = new Date(fin + 'T00:00:00');
+  while (actual <= final) {
+    fechas.push(actual.toISOString().slice(0, 10));
+    actual.setDate(actual.getDate() + 1);
+  }
+  return fechas;
+}
+
+async function guardarLicenciaSupabase(estudianteId, fechaInicio, fechaFin, motivo, archivo) {
+  try {
+    let archivoUrl = null;
+
+    // 1. Subir archivo si existe
+    if (archivo) {
+      const ext = archivo.name.split('.').pop();
+      const nombreArchivo = `licencia_${estudianteId}_${Date.now()}.${ext}`;
+
+      const { error: errorSubida } = await sb.storage
+        .from('licencias')
+        .upload(nombreArchivo, archivo);
+
+      if (errorSubida) throw errorSubida;
+
+      const { data: urlData } = sb.storage.from('licencias').getPublicUrl(nombreArchivo);
+      archivoUrl = urlData.publicUrl;
+    }
+
+    // 2. Obtener usuario actual (profesor que registra)
+    const { data: { user } } = await sb.auth.getUser();
+
+    // 3. Insertar registro en tabla licencias
+    const { error: errorInsert } = await sb.from('licencias').insert({
+      estudiante_id: parseInt(estudianteId),
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+      motivo,
+      archivo_url: archivoUrl,
+      creado_por: user ? user.id : null,
+    });
+    if (errorInsert) throw errorInsert;
+
+    // 4. Marcar cada día del rango como "Justificado" en asistencias
+    const fechas = _rangoFechas(fechaInicio, fechaFin);
+    for (const fecha of fechas) {
+      const { error: errorAsist } = await sb.from('asistencias').upsert({
+        estudiante_id: parseInt(estudianteId),
+        fecha,
+        estado: 'Justificado',
+        observacion: motivo,
+      }, { onConflict: 'estudiante_id,fecha' });
+      if (errorAsist) throw errorAsist;
+    }
+
+    return { ok: true, msg: `Licencia registrada — ${fechas.length} día(s) marcado(s) como justificado`, archivoUrl };
+
+  } catch (err) {
+    console.error(err);
+    return { ok: false, msg: err.message || 'Error al guardar la licencia' };
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    IMPORTAR EXCEL (CSV) — antes era guardar.php con multipart
 ═══════════════════════════════════════════════════════════════ */
 async function importarExcelSupabase(file) {
