@@ -817,6 +817,7 @@ function renderTablaAsistencias(lista) {
       <td class="td-code">${a.codigo}</td>
       <td><strong>${a.apellido}</strong>, ${a.nombre}</td>
       <td>${a.curso_nombre}</td>
+      <td>${a.turno || '—'}</td>
       <td>${a.fecha}</td>
       <td>${a.hora_entrada || '—'}</td>
       <td><span class="badge ${badgeEst[a.estado] || 'badge-blue'}">${a.estado}</span></td>
