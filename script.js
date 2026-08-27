@@ -847,8 +847,12 @@ async function cambiarEstadoAsist(id, estado) {
     estado,
     obs: registro.observacion || '',
   });
-  if (res.ok) toast('Guardado', 'Estado actualizado', 'success', 1800);
-  else toast('Error', res.msg, 'error');
+  if (res.ok) {
+    toast('Guardado', 'Estado actualizado', 'success', 1800);
+    cargarAsistencias();
+  } else {
+    toast('Error', res.msg, 'error');
+  }
 }
 
 function exportarAsistencias() {
