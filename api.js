@@ -445,14 +445,103 @@ async function importarExcelSupabase(file) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EXPORTAR CSV (del lado del navegador, ya no en el servidor)
+   EXPORTAR EXCEL PROFESIONAL (ExcelJS) — reemplaza a la exportación CSV
+   Requiere que index.html cargue la librería ExcelJS por CDN:
+   <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 ═══════════════════════════════════════════════════════════════ */
-function _descargarCSV(nombreArchivo, encabezados, filas) {
-  const BOM = '\uFEFF';
-  const csv = BOM + [encabezados, ...filas]
-    .map(fila => fila.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+// Colores institucionales — cambia estos si tu colegio tiene otros
+const _COLOR_HEADER   = 'FF1F4E79'; // azul institucional
+const _COLOR_TEXTO_HD = 'FFFFFFFF'; // blanco
+const _COLOR_CEBRA    = 'FFF2F6FA'; // celeste muy claro
+const _COLOR_BORDE    = 'FFD9D9D9'; // gris claro
+const _COLOR_VERDE    = 'FF1E7A34'; // Presente
+const _COLOR_ROJO     = 'FFB00020'; // Ausente
+const _COLOR_AMBAR    = 'FFB8860B'; // Tarde
+const _COLOR_AZUL_J   = 'FF1F4E79'; // Justificado
+
+function _colorEstado(estado) {
+  switch (estado) {
+    case 'Presente':    return _COLOR_VERDE;
+    case 'Ausente':     return _COLOR_ROJO;
+    case 'Tarde':       return _COLOR_AMBAR;
+    case 'Justificado': return _COLOR_AZUL_J;
+    default:            return 'FF444444';
+  }
+}
+
+// Arma la hoja con título, encabezado, filas cebra, bordes y auto-filtro
+function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEstado }) {
+  const totalCols = columnas.length;
+
+  // Fila 1: título del colegio / reporte (combinada)
+  ws.mergeCells(1, 1, 1, totalCols);
+  const tituloCell = ws.getCell(1, 1);
+  tituloCell.value = titulo;
+  tituloCell.font = { bold: true, size: 14, color: { argb: _COLOR_HEADER } };
+  tituloCell.alignment = { horizontal: 'left', vertical: 'middle' };
+  ws.getRow(1).height = 26;
+
+  // Fila 2: subtítulo (fecha, curso, mes, etc.)
+  if (subtitulo) {
+    ws.mergeCells(2, 1, 2, totalCols);
+    const subCell = ws.getCell(2, 1);
+    subCell.value = subtitulo;
+    subCell.font = { italic: true, size: 10, color: { argb: 'FF666666' } };
+    ws.getRow(2).height = 18;
+  }
+
+  const filaEncabezado = subtitulo ? 3 : 2;
+
+  // Encabezados de columnas
+  columnas.forEach((col, i) => {
+    const cell = ws.getCell(filaEncabezado, i + 1);
+    cell.value = col.header;
+    cell.font = { bold: true, color: { argb: _COLOR_TEXTO_HD }, size: 11 };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_HEADER } };
+    cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    ws.getColumn(i + 1).width = col.width || 16;
+  });
+  ws.getRow(filaEncabezado).height = 24;
+
+  // Filas de datos
+  filas.forEach((fila, idxFila) => {
+    const filaExcel = filaEncabezado + 1 + idxFila;
+    columnas.forEach((col, i) => {
+      const cell = ws.getCell(filaExcel, i + 1);
+      cell.value = fila[col.key] ?? '';
+      cell.alignment = { vertical: 'middle', horizontal: col.center ? 'center' : 'left' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: _COLOR_BORDE } },
+        bottom: { style: 'thin', color: { argb: _COLOR_BORDE } },
+        left: { style: 'thin', color: { argb: _COLOR_BORDE } },
+        right: { style: 'thin', color: { argb: _COLOR_BORDE } },
+      };
+      if (idxFila % 2 === 0) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_CEBRA } };
+      }
+      if (colEstado && col.key === colEstado) {
+        cell.font = { bold: true, color: { argb: _colorEstado(fila[col.key]) } };
+      }
+    });
+  });
+
+  // Auto-filtro y encabezado congelado
+  const ultimaFila = filaEncabezado + filas.length;
+  ws.autoFilter = {
+    from: { row: filaEncabezado, column: 1 },
+    to: { row: filaEncabezado, column: totalCols },
+  };
+  ws.views = [{ state: 'frozen', ySplit: filaEncabezado }];
+
+  return ultimaFila;
+}
+
+async function _descargarXLSX(wb, nombreArchivo) {
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = nombreArchivo;
@@ -465,20 +554,69 @@ async function exportarAsistenciasCSV(fecha, cursoId) {
   if (fecha) params.set('fecha', fecha);
   if (cursoId) params.set('curso_id', cursoId);
   const res = await get('listar.php?' + params.toString());
-  const filas = (res.data || []).map(a => [
-    a.codigo, a.nombre, a.apellido, a.curso_nombre, a.fecha, a.hora_entrada, a.hora_salida, a.estado, a.observacion,
-  ]);
-  _descargarCSV(`asistencias_${fecha || 'reporte'}.csv`,
-    ['Código', 'Nombre', 'Apellido', 'Curso', 'Fecha', 'Entrada', 'Salida', 'Estado', 'Observación'], filas);
+
+  const filas = (res.data || []).map(a => ({
+    codigo: a.codigo, nombre: a.nombre, apellido: a.apellido, curso: a.curso_nombre,
+    fecha: a.fecha, entrada: a.hora_entrada || '-', salida: a.hora_salida || '-',
+    estado: a.estado, obs: a.observacion || '',
+  }));
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Codyweb';
+  const ws = wb.addWorksheet('Asistencias', { pageSetup: { orientation: 'landscape', fitToPage: true } });
+
+  _armarHojaProfesional(ws, {
+    titulo: 'Reporte de Asistencias',
+    subtitulo: `Fecha: ${fecha || 'todas'}${cursoId ? ' — Curso filtrado' : ''}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
+    columnas: [
+      { header: 'Código',      key: 'codigo',  width: 12, center: true },
+      { header: 'Nombre',      key: 'nombre',  width: 18 },
+      { header: 'Apellido',    key: 'apellido',width: 18 },
+      { header: 'Curso',       key: 'curso',   width: 14, center: true },
+      { header: 'Fecha',       key: 'fecha',   width: 14, center: true },
+      { header: 'Entrada',     key: 'entrada', width: 12, center: true },
+      { header: 'Salida',      key: 'salida',  width: 12, center: true },
+      { header: 'Estado',      key: 'estado',  width: 14, center: true },
+      { header: 'Observación', key: 'obs',     width: 24 },
+    ],
+    filas,
+    colEstado: 'estado',
+  });
+
+  await _descargarXLSX(wb, `asistencias_${fecha || 'reporte'}.xlsx`);
 }
 
 async function exportarReporteCSV(mes, anio, cursoId) {
   const params = new URLSearchParams({ accion: 'reporte_mensual', mes, anio });
   if (cursoId) params.set('curso_id', cursoId);
   const res = await get('listar.php?' + params.toString());
-  const filas = (res.data || []).map(e => [
-    e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
-  ]);
-  _descargarCSV(`reporte_${mes}-${anio}.csv`,
-    ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
+
+  const filas = (res.data || []).map(e => ({
+    codigo: e.codigo, nombre: e.nombre, apellido: e.apellido, curso: e.curso,
+    dias: e.dias_registrados, presentes: e.presentes, tardanzas: e.tardanzas,
+    ausentes: e.ausentes, justificados: e.justificados,
+  }));
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Codyweb';
+  const ws = wb.addWorksheet('Reporte mensual', { pageSetup: { orientation: 'landscape', fitToPage: true } });
+
+  _armarHojaProfesional(ws, {
+    titulo: 'Reporte Mensual de Asistencia',
+    subtitulo: `Periodo: ${mes}/${anio}${cursoId ? ' — Curso filtrado' : ''}  ·  Generado: ${new Date().toLocaleString('es-BO')}`,
+    columnas: [
+      { header: 'Código',       key: 'codigo',     width: 12, center: true },
+      { header: 'Nombre',       key: 'nombre',     width: 18 },
+      { header: 'Apellido',     key: 'apellido',   width: 18 },
+      { header: 'Curso',        key: 'curso',      width: 14, center: true },
+      { header: 'Días reg.',    key: 'dias',       width: 12, center: true },
+      { header: 'Presentes',    key: 'presentes',  width: 12, center: true },
+      { header: 'Tardanzas',    key: 'tardanzas',  width: 12, center: true },
+      { header: 'Ausentes',     key: 'ausentes',   width: 12, center: true },
+      { header: 'Justificados', key: 'justificados', width: 13, center: true },
+    ],
+    filas,
+  });
+
+  await _descargarXLSX(wb, `reporte_${mes}-${anio}.xlsx`);
 }
