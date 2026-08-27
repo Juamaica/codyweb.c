@@ -456,7 +456,10 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">📋 Registro de asistencias</span>
-            <span class="badge badge-blue" id="totalAsistLabel">0 registros</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <button class="btn btn-outline btn-sm" onclick="cargarAsistencias()" title="Actualizar tabla">🔄</button>
+              <span class="badge badge-blue" id="totalAsistLabel">0 registros</span>
+            </div>
           </div>
           <div class="table-wrap">
             <table id="tablaAsistencias">
