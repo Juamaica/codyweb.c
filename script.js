@@ -1263,3 +1263,54 @@ async function cargarReporteIndividual() {
 
   activarTablasResponsive();
 }
+
+/* ══════════════════════════════════════════════════════════════
+   LICENCIAS
+═══════════════════════════════════════════════════════════════ */
+async function abrirModalLicencia() {
+  document.getElementById('licFechaInicio').value = '';
+  document.getElementById('licFechaFin').value = '';
+  document.getElementById('licMotivo').value = '';
+  document.getElementById('licArchivo').value = '';
+
+  const res = await get('listar.php?accion=estudiantes&estado=Activo');
+  const lista = res.data || [];
+  const sel = document.getElementById('licEstudiante');
+  sel.innerHTML = '<option value="">Selecciona un estudiante...</option>' +
+    lista.map(e => `<option value="${e.id}">${e.apellido} ${e.nombre} — ${e.curso_nombre}</option>`).join('');
+
+  abrirModal('modalLicencia');
+}
+
+async function guardarLicencia() {
+  const estudianteId = document.getElementById('licEstudiante').value;
+  const fechaInicio  = document.getElementById('licFechaInicio').value;
+  const fechaFin     = document.getElementById('licFechaFin').value;
+  const motivo       = document.getElementById('licMotivo').value.trim();
+  const archivo      = document.getElementById('licArchivo').files[0] || null;
+
+  if (!estudianteId || !fechaInicio || !fechaFin || !motivo) {
+    return toast('Campos incompletos', 'Estudiante, fechas y motivo son obligatorios', 'warn');
+  }
+  if (fechaFin < fechaInicio) {
+    return toast('Fechas inválidas', 'La fecha fin no puede ser anterior a la fecha inicio', 'warn');
+  }
+
+  const btn = document.getElementById('btnGuardarLicencia');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  const res = await guardarLicenciaSupabase(estudianteId, fechaInicio, fechaFin, motivo, archivo);
+
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar licencia';
+
+  if (res.ok) {
+    toast('Licencia registrada', res.msg, 'success');
+    cerrarModal('modalLicencia');
+    // Refrescar la tabla de asistencias si estamos en esa página
+    if (App.paginaActual === 'asistencias') cargarAsistencias();
+  } else {
+    toast('Error', res.msg, 'error');
+  }
+}
