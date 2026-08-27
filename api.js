@@ -470,6 +470,11 @@ function _colorEstado(estado) {
   }
 }
 
+// Traduce el estado real (guardado en la BD) a la etiqueta que se muestra en el Excel
+function _etiquetaEstado(estado) {
+  return estado === 'Ausente' ? 'Falta' : estado;
+}
+
 // Arma la hoja con título, encabezado, filas cebra, bordes y auto-filtro
 function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEstado }) {
   const totalCols = columnas.length;
@@ -509,7 +514,8 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
     const filaExcel = filaEncabezado + 1 + idxFila;
     columnas.forEach((col, i) => {
       const cell = ws.getCell(filaExcel, i + 1);
-      cell.value = fila[col.key] ?? '';
+      const esColEstado = colEstado && col.key === colEstado;
+      cell.value = esColEstado ? _etiquetaEstado(fila[col.key]) : (fila[col.key] ?? '');
       cell.alignment = { vertical: 'middle', horizontal: col.center ? 'center' : 'left' };
       cell.border = {
         top: { style: 'thin', color: { argb: _COLOR_BORDE } },
@@ -520,7 +526,7 @@ function _armarHojaProfesional(ws, { titulo, subtitulo, columnas, filas, colEsta
       if (idxFila % 2 === 0) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: _COLOR_CEBRA } };
       }
-      if (colEstado && col.key === colEstado) {
+      if (esColEstado) {
         cell.font = { bold: true, color: { argb: _colorEstado(fila[col.key]) } };
       }
     });
