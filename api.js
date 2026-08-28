@@ -36,6 +36,20 @@ function _aplanarAsistencia(a) {
   };
 }
 
+// Calcula el siguiente código EST-XXXX de forma robusta: trae TODOS los
+// códigos existentes (no solo el "último" por orden alfabético, que falla
+// si hay algún registro con código NULL) y toma el número más alto real.
+async function _siguienteCodigoEstudiante() {
+  const { data: todos } = await sb.from('estudiantes').select('codigo');
+  let maxNum = 0;
+  (todos || []).forEach((r) => {
+    if (!r.codigo) return;
+    const n = parseInt(String(r.codigo).replace('EST-', ''), 10);
+    if (!isNaN(n) && n > maxNum) maxNum = n;
+  });
+  return 'EST-' + String(maxNum + 1).padStart(4, '0');
+}
+
 /* ══════════════════════════════════════════════════════════════
    GET — equivalente a listar.php
 ═══════════════════════════════════════════════════════════════ */
@@ -272,15 +286,8 @@ async function post(url, data) {
           if (error) throw error;
           return { ok: true, msg: 'Estudiante actualizado', id };
         } else {
-          // Generar código único EST-0001, EST-0002...
-          const { data: ultimo } = await sb.from('estudiantes')
-            .select('codigo').order('codigo', { ascending: false }).limit(1).maybeSingle();
-          let numero = 1;
-          if (ultimo && ultimo.codigo) {
-            const n = parseInt(ultimo.codigo.replace('EST-', ''));
-            if (!isNaN(n)) numero = n + 1;
-          }
-          const codigo = 'EST-' + String(numero).padStart(4, '0');
+          // Generar código único EST-0001, EST-0002... (robusto ante códigos NULL)
+          const codigo = await _siguienteCodigoEstudiante();
           const token  = crypto.randomUUID();
 
           const { data: nuevo, error } = await sb.from('estudiantes').insert({
@@ -409,13 +416,13 @@ async function importarExcelSupabase(file) {
   const filas = texto.split(/\r?\n/).map(f => f.trim()).filter(Boolean);
 
   const { data: cursos } = await sb.from('cursos').select('id, nombre');
-  const { data: ultimo } = await sb.from('estudiantes')
-    .select('codigo').order('codigo', { ascending: false }).limit(1).maybeSingle();
+  const { data: todosCod } = await sb.from('estudiantes').select('codigo');
   let numero = 1;
-  if (ultimo && ultimo.codigo) {
-    const n = parseInt(ultimo.codigo.replace('EST-', ''));
-    if (!isNaN(n)) numero = n + 1;
-  }
+  (todosCod || []).forEach((r) => {
+    if (!r.codigo) return;
+    const n = parseInt(String(r.codigo).replace('EST-', ''), 10);
+    if (!isNaN(n) && n >= numero) numero = n + 1;
+  });
 
   let insertados = 0;
   const errores = [];
