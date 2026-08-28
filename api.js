@@ -272,39 +272,17 @@ async function post(url, data) {
           if (error) throw error;
           return { ok: true, msg: 'Estudiante actualizado', id };
         } else {
-          // Generar código único EST-0001, EST-0002... (comparando como número, no como texto)
-          async function _siguienteCodigo() {
-            const { data: todos } = await sb.from('estudiantes').select('codigo');
-            let max = 0;
-            (todos || []).forEach(e => {
-              const n = parseInt((e.codigo || '').replace('EST-', ''));
-              if (!isNaN(n) && n > max) max = n;
-            });
-            return 'EST-' + String(max + 1).padStart(4, '0');
-          }
-
+          // El código (EST-0001, EST-0002...) ahora lo genera Supabase automáticamente
+          // (ver función generar_codigo_estudiante en la base de datos), así nunca choca
+          // aunque haya estudiantes creados por otros profesores que no se puedan ver.
           const token = crypto.randomUUID();
-          let nuevo, error, intentos = 0;
 
-          while (intentos < 5) {
-            const codigo = await _siguienteCodigo();
-            const resp = await sb.from('estudiantes').insert({
-              codigo, nombre, apellido, ci, curso_id: parseInt(curso_id), genero,
-              telefono_tutor: telefono, email, qr_token: token, estado: 'Activo',
-            }).select().single();
+          const { data: nuevo, error } = await sb.from('estudiantes').insert({
+            nombre, apellido, ci, curso_id: parseInt(curso_id), genero,
+            telefono_tutor: telefono, email, qr_token: token, estado: 'Activo',
+          }).select().single();
 
-            if (!resp.error) { nuevo = resp.data; error = null; break; }
-
-            // Si el choque es por código duplicado, reintenta con el siguiente número
-            if (resp.error.message && resp.error.message.includes('estudiantes_codigo_key')) {
-              intentos++;
-              continue;
-            }
-            error = resp.error;
-            break;
-          }
           if (error) throw error;
-          if (!nuevo) throw new Error('No se pudo generar un código único, intenta de nuevo');
           return { ok: true, msg: 'Estudiante registrado', id: nuevo.id, codigo: nuevo.codigo };
         }
       }
@@ -426,15 +404,6 @@ async function importarExcelSupabase(file) {
   const filas = texto.split(/\r?\n/).map(f => f.trim()).filter(Boolean);
 
   const { data: cursos } = await sb.from('cursos').select('id, nombre');
-  const { data: todos } = await sb.from('estudiantes').select('codigo');
-  let numero = 1;
-  if (todos && todos.length) {
-    const max = todos.reduce((m, e) => {
-      const n = parseInt((e.codigo || '').replace('EST-', ''));
-      return !isNaN(n) && n > m ? n : m;
-    }, 0);
-    numero = max + 1;
-  }
 
   let insertados = 0;
   const errores = [];
@@ -450,12 +419,15 @@ async function importarExcelSupabase(file) {
     if (!curso) { errores.push(`Fila ${i + 1}: curso '${cursoNombre}' no encontrado`); continue; }
 
     const genero = ['M', 'F'].includes((generoIn || 'M').toUpperCase()[0]) ? (generoIn || 'M').toUpperCase()[0] : 'M';
-    const codigo = codigoIn || ('EST-' + String(numero++).padStart(4, '0'));
     const token  = crypto.randomUUID();
 
-    const { error } = await sb.from('estudiantes').insert({
-      codigo, nombre, apellido, ci, curso_id: curso.id, genero, qr_token: token, estado: 'Activo',
-    });
+    // Si el CSV trae un código, se usa ese; si no, Supabase genera uno automáticamente
+    const registro = {
+      nombre, apellido, ci, curso_id: curso.id, genero, qr_token: token, estado: 'Activo',
+    };
+    if (codigoIn) registro.codigo = codigoIn;
+
+    const { error } = await sb.from('estudiantes').insert(registro);
     if (error) errores.push(`Fila ${i + 1}: ya existe (código duplicado)`);
     else insertados++;
   }
