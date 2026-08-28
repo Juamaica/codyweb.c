@@ -395,7 +395,16 @@ async function guardarEstudiante() {
     return toast('Campos incompletos', 'Nombre, apellido y curso son obligatorios', 'warn');
   }
 
+  const btn = document.getElementById('btnGuardarEstudiante');
+  if (btn.disabled) return; // evita doble clic / doble guardado
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
   const res = await post('guardar.php', data);
+
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar';
+
   if (res.ok) {
     toast('Guardado', res.msg, 'success');
     cerrarModal('modalEstudiante');
