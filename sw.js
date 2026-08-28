@@ -3,10 +3,21 @@
 //  Permite instalar la app y que cargue rápido / offline
 // ============================================================
 
-const CACHE_NAME = 'codyweb-v1';
+// IMPORTANTE: sube este número cada vez que hagas un deploy con cambios
+// de código (api.js, script.js, index.html, etc). Eso fuerza a que
+// los celulares con la app instalada bajen la versión nueva.
+const CACHE_NAME = 'codyweb-v2';
 
-// Archivos propios que guardamos en caché (la "cáscara" de la app)
-const ARCHIVOS_CACHE = [
+// Archivos que casi nunca cambian → estrategia "caché primero"
+const ARCHIVOS_ESTATICOS = [
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+];
+
+// Archivos de código/lógica de la app → estrategia "red primero"
+// (siempre intenta traer la versión más nueva del servidor)
+const ARCHIVOS_CODIGO = [
   './',
   './index.html',
   './login.html',
@@ -14,17 +25,16 @@ const ARCHIVOS_CACHE = [
   './script.js',
   './api.js',
   './supabaseClient.js',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
 ];
 
-// Al instalar: guardamos los archivos base en caché
+// Al instalar: guardamos todo en caché como respaldo offline
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ARCHIVOS_CACHE))
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll([...ARCHIVOS_ESTATICOS, ...ARCHIVOS_CODIGO])
+    )
   );
-  self.skipWaiting();
+  self.skipWaiting(); // activa el nuevo SW de inmediato, sin esperar a cerrar pestañas
 });
 
 // Al activar: borramos cachés viejas de versiones anteriores
@@ -36,12 +46,16 @@ self.addEventListener('activate', (event) => {
       )
     )
   );
-  self.clients.claim();
+  self.clients.claim(); // toma control de las pestañas abiertas de inmediato
 });
 
-// Al pedir un archivo:
-// - Si es Supabase (datos en vivo) → siempre ir a internet, nunca caché
-// - Si es un archivo propio → usar caché primero, y de fondo actualizar
+function esArchivoDeCodigo(url) {
+  return ARCHIVOS_CODIGO.some((archivo) => {
+    const nombre = archivo.replace('./', '');
+    return nombre === '' ? url.endsWith('/') : url.endsWith(nombre);
+  });
+}
+
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
@@ -50,6 +64,25 @@ self.addEventListener('fetch', (event) => {
     return; // deja pasar la petición normal a internet
   }
 
+  // Código de la app (HTML, JS, CSS propio) → RED PRIMERO
+  // Si hay internet, siempre trae la versión más nueva del servidor.
+  // Si falla (sin internet), recién ahí usa lo que haya en caché.
+  if (esArchivoDeCodigo(url) || event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-store' })
+        .then((respuesta) => {
+          if (respuesta && respuesta.status === 200) {
+            const copia = respuesta.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
+          }
+          return respuesta;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Archivos estáticos (íconos, manifest) → CACHÉ PRIMERO
   event.respondWith(
     caches.match(event.request).then((cacheado) => {
       const fetchPromise = fetch(event.request)
@@ -60,7 +93,7 @@ self.addEventListener('fetch', (event) => {
           }
           return respuesta;
         })
-        .catch(() => cacheado); // sin internet: usar lo que haya en caché
+        .catch(() => cacheado);
 
       return cacheado || fetchPromise;
     })
