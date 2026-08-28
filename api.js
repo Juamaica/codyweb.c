@@ -272,23 +272,40 @@ async function post(url, data) {
           if (error) throw error;
           return { ok: true, msg: 'Estudiante actualizado', id };
         } else {
-          // Generar código único EST-0001, EST-0002...
-          const { data: ultimo } = await sb.from('estudiantes')
-            .select('codigo').order('codigo', { ascending: false }).limit(1).maybeSingle();
-          let numero = 1;
-          if (ultimo && ultimo.codigo) {
-            const n = parseInt(ultimo.codigo.replace('EST-', ''));
-            if (!isNaN(n)) numero = n + 1;
+          // Generar código único EST-0001, EST-0002... (comparando como número, no como texto)
+          async function _siguienteCodigo() {
+            const { data: todos } = await sb.from('estudiantes').select('codigo');
+            let max = 0;
+            (todos || []).forEach(e => {
+              const n = parseInt((e.codigo || '').replace('EST-', ''));
+              if (!isNaN(n) && n > max) max = n;
+            });
+            return 'EST-' + String(max + 1).padStart(4, '0');
           }
-          const codigo = 'EST-' + String(numero).padStart(4, '0');
-          const token  = crypto.randomUUID();
 
-          const { data: nuevo, error } = await sb.from('estudiantes').insert({
-            codigo, nombre, apellido, ci, curso_id: parseInt(curso_id), genero,
-            telefono_tutor: telefono, email, qr_token: token, estado: 'Activo',
-          }).select().single();
+          const token = crypto.randomUUID();
+          let nuevo, error, intentos = 0;
+
+          while (intentos < 5) {
+            const codigo = await _siguienteCodigo();
+            const resp = await sb.from('estudiantes').insert({
+              codigo, nombre, apellido, ci, curso_id: parseInt(curso_id), genero,
+              telefono_tutor: telefono, email, qr_token: token, estado: 'Activo',
+            }).select().single();
+
+            if (!resp.error) { nuevo = resp.data; error = null; break; }
+
+            // Si el choque es por código duplicado, reintenta con el siguiente número
+            if (resp.error.message && resp.error.message.includes('estudiantes_codigo_key')) {
+              intentos++;
+              continue;
+            }
+            error = resp.error;
+            break;
+          }
           if (error) throw error;
-          return { ok: true, msg: 'Estudiante registrado', id: nuevo.id, codigo };
+          if (!nuevo) throw new Error('No se pudo generar un código único, intenta de nuevo');
+          return { ok: true, msg: 'Estudiante registrado', id: nuevo.id, codigo: nuevo.codigo };
         }
       }
 
@@ -409,12 +426,14 @@ async function importarExcelSupabase(file) {
   const filas = texto.split(/\r?\n/).map(f => f.trim()).filter(Boolean);
 
   const { data: cursos } = await sb.from('cursos').select('id, nombre');
-  const { data: ultimo } = await sb.from('estudiantes')
-    .select('codigo').order('codigo', { ascending: false }).limit(1).maybeSingle();
+  const { data: todos } = await sb.from('estudiantes').select('codigo');
   let numero = 1;
-  if (ultimo && ultimo.codigo) {
-    const n = parseInt(ultimo.codigo.replace('EST-', ''));
-    if (!isNaN(n)) numero = n + 1;
+  if (todos && todos.length) {
+    const max = todos.reduce((m, e) => {
+      const n = parseInt((e.codigo || '').replace('EST-', ''));
+      return !isNaN(n) && n > m ? n : m;
+    }, 0);
+    numero = max + 1;
   }
 
   let insertados = 0;
