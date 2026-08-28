@@ -1319,3 +1319,50 @@ async function guardarLicencia() {
     toast('Error', res.msg, 'error');
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   MARCAR FALTA (ausencia manual, sin licencia)
+═══════════════════════════════════════════════════════════════ */
+async function abrirModalFalta() {
+  document.getElementById('faltaFecha').value = new Date().toISOString().slice(0, 10);
+
+  const res = await get('listar.php?accion=estudiantes&estado=Activo');
+  const lista = res.data || [];
+  const sel = document.getElementById('faltaEstudiante');
+  sel.innerHTML = '<option value="">Selecciona un estudiante...</option>' +
+    lista.map(e => `<option value="${e.id}">${e.apellido} ${e.nombre} — ${e.curso_nombre}</option>`).join('');
+
+  abrirModal('modalFalta');
+}
+
+async function guardarFalta() {
+  const estudianteId = document.getElementById('faltaEstudiante').value;
+  const fecha = document.getElementById('faltaFecha').value;
+
+  if (!estudianteId || !fecha) {
+    return toast('Campos incompletos', 'Selecciona estudiante y fecha', 'warn');
+  }
+
+  const btn = document.getElementById('btnGuardarFalta');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  const res = await post('guardar.php', {
+    accion: 'asistencia_manual',
+    estudiante_id: estudianteId,
+    fecha,
+    estado: 'Ausente',
+    obs: '',
+  });
+
+  btn.disabled = false;
+  btn.textContent = '💾 Marcar como ausente';
+
+  if (res.ok) {
+    toast('Falta registrada', 'Estudiante marcado como ausente', 'success');
+    cerrarModal('modalFalta');
+    if (App.paginaActual === 'asistencias') cargarAsistencias();
+  } else {
+    toast('Error', res.msg, 'error');
+  }
+}
