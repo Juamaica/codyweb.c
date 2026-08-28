@@ -30,8 +30,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <!-- html2canvas para descargar QR -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- ExcelJS (exportación de reportes/asistencias a Excel profesional) -->
-  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 </head>
 <body>
 
@@ -443,6 +441,7 @@
           <button class="btn btn-primary" onclick="cargarAsistencias()">🔍 Filtrar</button>
           <button class="btn btn-success" onclick="exportarAsistencias()">📤 Exportar Excel</button>
           <button class="btn btn-outline" onclick="abrirModalLicencia()">📄 Registrar licencia</button>
+          <button class="btn btn-outline" onclick="abrirModalFalta()">➕ Marcar falta</button>
         </div>
       </div>
 
@@ -839,6 +838,30 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrarModal('modalLicencia')">Cancelar</button>
       <button class="btn btn-gold" id="btnGuardarLicencia" onclick="guardarLicencia()">💾 Guardar licencia</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Marcar Falta -->
+<div class="modal-overlay" id="modalFalta">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">➕ Marcar falta</span>
+      <button class="modal-close" onclick="cerrarModal('modalFalta')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Estudiante *</label>
+        <select class="form-control" id="faltaEstudiante"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha *</label>
+        <input class="form-control" type="date" id="faltaFecha">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalFalta')">Cancelar</button>
+      <button class="btn btn-gold" id="btnGuardarFalta" onclick="guardarFalta()">💾 Marcar como ausente</button>
     </div>
   </div>
 </div>
