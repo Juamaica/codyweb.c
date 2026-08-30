@@ -43,7 +43,7 @@
 <aside class="sidebar" id="sidebar">
 
   <div class="sidebar-header">
-    <div class="sidebar-logo"><img src="img/escudo.png" alt="Escudo U.E. Juana Azurduy de Padilla"></div>
+    <div class="sidebar-logo"><img id="brandEscudo" src="img/escudo.png" alt="Escudo del colegio"></div>
     <div class="sidebar-brand">
       <div class="site-name">Codyweb.com</div>
       <div class="site-sub">Sistema de Asistencia</div>
@@ -51,8 +51,8 @@
   </div>
 
   <div class="sidebar-colegio">
-    <p>U.E. Juana Azurduy de Padilla</p>
-    <span>Satélite Norte - Warnes</span>
+    <p id="brandNombreColegio">U.E. Juana Azurduy de Padilla</p>
+    <span id="brandSede">Satélite Norte - Warnes</span>
   </div>
 
   <nav class="sidebar-nav">
@@ -104,7 +104,7 @@
       <button class="hamburger" onclick="toggleSidebar()">☰</button>
       <div>
         <div class="topbar-title" id="topbarTitle">Inicio</div>
-        <div class="topbar-subtitle">U.E. Juana Azurduy de Padilla</div>
+        <div class="topbar-subtitle" id="brandNombreColegioTop">U.E. Juana Azurduy de Padilla</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -603,19 +603,29 @@
         <div class="card">
           <div class="card-header"><span class="card-title">🏫 Datos del colegio</span></div>
           <div class="card-body">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;">
+              <div style="width:64px;height:64px;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:5px;flex-shrink:0;">
+                <img id="cfgEscudoPreview" src="img/escudo.png" alt="Escudo" style="width:100%;height:100%;object-fit:contain;display:block;">
+              </div>
+              <div>
+                <label class="form-label" style="margin-bottom:6px;">Escudo del colegio</label>
+                <input type="file" id="cfgEscudoArchivo" accept="image/*" style="display:none" onchange="previewEscudo(event)">
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('cfgEscudoArchivo').click()">📤 Cambiar escudo</button>
+              </div>
+            </div>
             <div class="form-group">
               <label class="form-label">Nombre del colegio</label>
-              <input class="form-control" type="text" id="cfgNombreColegio" value="U.E. Juana Azurduy de Padilla" readonly>
+              <input class="form-control" type="text" id="cfgNombreColegio" placeholder="Ej: U.E. Juana Azurduy de Padilla">
             </div>
             <div class="form-group">
               <label class="form-label">Sede</label>
-              <input class="form-control" type="text" id="cfgSede" value="Satélite Norte - Warnes" readonly>
+              <input class="form-control" type="text" id="cfgSede" placeholder="Ej: Satélite Norte - Warnes">
             </div>
             <div class="form-group">
               <label class="form-label">Gestión escolar</label>
               <input class="form-control" type="text" id="cfgGestion" value="2026">
             </div>
-            <button class="btn btn-gold" onclick="guardarConfigColegio()">💾 Guardar cambios</button>
+            <button class="btn btn-gold" id="btnGuardarColegio" onclick="guardarConfigColegio()">💾 Guardar cambios</button>
           </div>
         </div>
         <div class="card">
