@@ -454,9 +454,9 @@ async function cargarQR() {
   grid.innerHTML = lista.map(e => `
     <div class="qr-card" id="qrcard-${e.id}">
       <div class="qr-card-header">
-        <div class="qr-card-logo"><img src="img/escudo.png" alt="Escudo"></div>
-        <div class="qr-colegio-name">U.E. Juana Azurduy de Padilla</div>
-        <div class="qr-sede">Satélite Norte - Warnes</div>
+        <div class="qr-card-logo"><img src="${App.branding.escudo_url || 'img/escudo.png'}" alt="Escudo"></div>
+        <div class="qr-colegio-name">${App.branding.nombre_colegio || 'U.E. Juana Azurduy de Padilla'}</div>
+        <div class="qr-sede">${App.branding.sede || 'Satélite Norte - Warnes'}</div>
       </div>
       <div class="qr-canvas-wrap">
         <div id="qr-${e.id}"></div>
@@ -528,9 +528,9 @@ async function verQREstudiante(id) {
     grid.innerHTML = `
       <div class="qr-card" id="qrcard-${e.id}" style="max-width:280px;margin:auto;">
         <div class="qr-card-header">
-          <div class="qr-card-logo"><img src="img/escudo.png" alt="Escudo"></div>
-          <div class="qr-colegio-name">U.E. Juana Azurduy de Padilla</div>
-          <div class="qr-sede">Satélite Norte - Warnes</div>
+          <div class="qr-card-logo"><img src="${App.branding.escudo_url || 'img/escudo.png'}" alt="Escudo"></div>
+          <div class="qr-colegio-name">${App.branding.nombre_colegio || 'U.E. Juana Azurduy de Padilla'}</div>
+          <div class="qr-sede">${App.branding.sede || 'Satélite Norte - Warnes'}</div>
         </div>
         <div class="qr-canvas-wrap">
           <div id="qr-${e.id}"></div>
@@ -1008,7 +1008,9 @@ async function cargarConfiguracion() {
     if (cfg.hora_entrada)    document.getElementById('cfgHoraEntrada').value = cfg.hora_entrada;
     if (cfg.hora_tolerancia) document.getElementById('cfgHoraTolerancia').value = cfg.hora_tolerancia;
     if (cfg.hora_salida)     document.getElementById('cfgHoraSalida').value = cfg.hora_salida;
+    if (cfg.escudo_url)      document.getElementById('cfgEscudoPreview').src = cfg.escudo_url;
   }
+  App.nuevoEscudoArchivo = null;
 
   const res = await get('listar.php?accion=cursos');
   const cursos = res.data || [];
@@ -1026,11 +1028,56 @@ async function cargarConfiguracion() {
   activarTablasResponsive();
 }
 
+function previewEscudo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  App.nuevoEscudoArchivo = file;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById('cfgEscudoPreview').src = e.target.result; };
+  reader.readAsDataURL(file);
+}
+
 async function guardarConfigColegio() {
-  const gestion = document.getElementById('cfgGestion').value.trim();
-  const res = await post('guardar.php', { accion: 'guardar_configuracion', gestion });
-  if (res.ok) toast('Guardado', 'Datos del colegio actualizados', 'success');
-  else toast('Error', res.msg, 'error');
+  const gestion        = document.getElementById('cfgGestion').value.trim();
+  const nombre_colegio = document.getElementById('cfgNombreColegio').value.trim();
+  const sede           = document.getElementById('cfgSede').value.trim();
+
+  const btn = document.getElementById('btnGuardarColegio');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  // Si eligió un nuevo escudo, subirlo primero
+  let escudo_url = null;
+  if (App.nuevoEscudoArchivo) {
+    const resEscudo = await subirEscudoSupabase(App.nuevoEscudoArchivo);
+    if (!resEscudo.ok) {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar cambios';
+      return toast('Error', resEscudo.msg, 'error');
+    }
+    escudo_url = resEscudo.url;
+  }
+
+  const payload = { accion: 'guardar_configuracion', gestion, nombre_colegio, sede };
+  if (escudo_url) payload.escudo_url = escudo_url;
+
+  const res = await post('guardar.php', payload);
+
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar cambios';
+
+  if (res.ok) {
+    toast('Guardado', 'Datos del colegio actualizados', 'success');
+    App.branding = {
+      nombre_colegio: nombre_colegio || App.branding.nombre_colegio,
+      sede: sede || App.branding.sede,
+      escudo_url: escudo_url || App.branding.escudo_url,
+    };
+    App.nuevoEscudoArchivo = null;
+    aplicarBranding();
+  } else {
+    toast('Error', res.msg, 'error');
+  }
 }
 
 async function guardarHorarios() {
@@ -1177,9 +1224,47 @@ function confirmarCerrarSesion() {
 document.addEventListener('DOMContentLoaded', () => {
   // Precargar cursos
   cargarCursosFiltros();
+  // Marca del colegio (nombre, sede, escudo) — configurable, no está "quemada"
+  cargarBrandingInicial();
   // Página inicial
   cargarInicio();
 });
+
+/* ══════════════════════════════════════════════════════════════
+   MARCA DEL COLEGIO (branding configurable)
+   Permite que cualquier colegio use Codyweb con su propio nombre,
+   sede y escudo, cambiándolos desde Configuración — sin tocar código.
+═══════════════════════════════════════════════════════════════ */
+App.branding = { nombre_colegio: null, sede: null, escudo_url: null };
+
+async function cargarBrandingInicial() {
+  const res = await get('listar.php?accion=configuracion');
+  const cfg = res.data || {};
+  App.branding = {
+    nombre_colegio: cfg.nombre_colegio || null,
+    sede: cfg.sede || null,
+    escudo_url: cfg.escudo_url || null,
+  };
+  aplicarBranding();
+}
+
+function aplicarBranding() {
+  const nombre = App.branding.nombre_colegio; // si es null, se deja el texto de ejemplo del HTML
+  const sede   = App.branding.sede;
+  const escudo = App.branding.escudo_url || 'img/escudo.png';
+
+  if (nombre) {
+    document.getElementById('brandNombreColegio').textContent = nombre;
+    document.getElementById('brandNombreColegioTop').textContent = nombre;
+  }
+  if (sede) {
+    document.getElementById('brandSede').textContent = sede;
+  }
+  document.getElementById('brandEscudo').src = escudo;
+  const preview = document.getElementById('cfgEscudoPreview');
+  if (preview) preview.src = escudo;
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    ASISTENCIAS — FILTRO TURNO Y TABS
