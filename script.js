@@ -454,6 +454,7 @@ async function cargarQR() {
   grid.innerHTML = lista.map(e => `
     <div class="qr-card" id="qrcard-${e.id}">
       <div class="qr-card-header">
+        <div class="qr-card-logo"><img src="img/escudo.png" alt="Escudo"></div>
         <div class="qr-colegio-name">U.E. Juana Azurduy de Padilla</div>
         <div class="qr-sede">Satélite Norte - Warnes</div>
       </div>
@@ -527,6 +528,7 @@ async function verQREstudiante(id) {
     grid.innerHTML = `
       <div class="qr-card" id="qrcard-${e.id}" style="max-width:280px;margin:auto;">
         <div class="qr-card-header">
+          <div class="qr-card-logo"><img src="img/escudo.png" alt="Escudo"></div>
           <div class="qr-colegio-name">U.E. Juana Azurduy de Padilla</div>
           <div class="qr-sede">Satélite Norte - Warnes</div>
         </div>
