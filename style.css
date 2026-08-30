@@ -73,13 +73,18 @@ body {
   gap: 12px;
 }
 .sidebar-logo {
-  width: 46px; height: 46px;
-  border-radius: 12px;
-  background: var(--gold);
+  width: 54px; height: 54px;
+  border-radius: 14px;
+  background: var(--white);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.5rem;
   flex-shrink: 0;
-  box-shadow: 0 0 0 4px rgba(201,162,39,.22);
+  padding: 5px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25), 0 0 0 3px rgba(201,162,39,.35);
+}
+.sidebar-logo img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
 }
 .sidebar-brand { line-height: 1.2; }
 .sidebar-brand .site-name {
@@ -515,6 +520,15 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   padding: 14px;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
+.qr-card-logo {
+  width: 34px; height: 34px;
+  background: var(--white);
+  border-radius: 8px;
+  padding: 2px;
+  margin-bottom: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.qr-card-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .qr-colegio-name {
   font-size: .65rem; font-weight: 700; letter-spacing: .8px;
   text-transform: uppercase; color: var(--gold-light);
@@ -740,7 +754,7 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 
   /* Menú más compacto, menos "abultado" */
   .sidebar-header { padding: 18px 16px 14px; gap: 10px; }
-  .sidebar-logo { width: 38px; height: 38px; font-size: 1.2rem; }
+  .sidebar-logo { width: 40px; height: 40px; border-radius: 11px; padding: 3px; }
   .sidebar-brand .site-name { font-size: .95rem; }
   .sidebar-brand .site-sub { font-size: .62rem; }
   .sidebar-colegio { padding: 10px 16px; }
