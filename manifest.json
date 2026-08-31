@@ -1,14 +1,12 @@
 {
   "name": "Codyweb - Sistema de Asistencia Estudiantil",
   "short_name": "Codyweb",
-  "description": "Sistema de asistencia estudiantil de la U.E. Juana Azurduy de Padilla",
-  "start_url": "/index.html",
-  "scope": "/",
+  "description": "Sistema de gestión y control de asistencia estudiantil",
+  "start_url": "index.html",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#0A2647",
   "theme_color": "#0A2647",
-  "lang": "es",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -23,7 +21,13 @@
       "purpose": "any"
     },
     {
-      "src": "icons/icon-maskable-512.png",
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
