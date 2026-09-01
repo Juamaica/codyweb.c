@@ -1010,3 +1010,65 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 .login-msg-ok { background: #DCFCE7; color: #15803D; }
 
 .login-footer { margin-top: 20px; font-size: .75rem; color: rgba(232,197,71,.55); }
+
+/* ═══════════════════════════════════════════════════════════
+   CUSTOM SELECT (reemplazo del <select> nativo)
+   ═══════════════════════════════════════════════════════════ */
+.custom-select { position: relative; }
+.custom-select select { display: none; }
+
+.custom-select-trigger {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-size: .88rem; font-family: inherit;
+  color: var(--text-main); background: var(--white);
+  cursor: pointer; text-align: left;
+  transition: border-color var(--trans), box-shadow var(--trans);
+}
+.custom-select-trigger:hover { border-color: var(--navy-light); }
+.custom-select.open .custom-select-trigger {
+  border-color: var(--navy-mid);
+  box-shadow: 0 0 0 3px rgba(30,58,95,.12);
+}
+.custom-select-trigger .csel-label {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.custom-select-trigger .csel-arrow {
+  font-size: .7rem; color: var(--text-muted); flex-shrink: 0;
+  transition: transform var(--trans), color var(--trans);
+}
+.custom-select.open .csel-arrow { transform: rotate(180deg); color: var(--gold); }
+
+.custom-select-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--navy);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(10,22,40,.35);
+  padding: 6px;
+  z-index: 500;
+  max-height: 260px; overflow-y: auto;
+  opacity: 0; transform: translateY(-6px) scale(.98);
+  pointer-events: none;
+  transition: opacity var(--trans), transform var(--trans);
+}
+.custom-select.open .custom-select-panel {
+  opacity: 1; transform: none; pointer-events: all;
+}
+.custom-select-option {
+  padding: 10px 12px; border-radius: 8px;
+  font-size: .86rem; color: rgba(255,255,255,.75);
+  cursor: pointer;
+  transition: background var(--trans), color var(--trans);
+}
+.custom-select-option:hover { background: rgba(255,255,255,.08); color: #fff; }
+.custom-select-option.selected {
+  background: linear-gradient(90deg, var(--gold) 0%, #B8920F 100%);
+  color: var(--navy); font-weight: 700;
+}
+.custom-select-empty {
+  padding: 14px 12px; font-size: .8rem;
+  color: rgba(255,255,255,.4); text-align: center;
+}
