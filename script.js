@@ -5,6 +5,34 @@
 
 'use strict';
 
+/* ══════════════════════════════════════════════════════════════
+   BLOQUEO DE ZOOM (para que se sienta como app nativa)
+   Los navegadores modernos suelen ignorar el "user-scalable=no"
+   del viewport, así que se bloquea el zoom manualmente.
+═══════════════════════════════════════════════════════════════ */
+// Bloquear zoom con pellizco (2 dedos)
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+// Bloquear gesto de zoom en iOS Safari
+document.addEventListener('gesturestart', (e) => e.preventDefault());
+document.addEventListener('gesturechange', (e) => e.preventDefault());
+document.addEventListener('gestureend', (e) => e.preventDefault());
+
+// Bloquear zoom por doble-tap
+let ultimoToqueZoom = 0;
+document.addEventListener('touchend', (e) => {
+  const ahora = Date.now();
+  if (ahora - ultimoToqueZoom <= 300) e.preventDefault();
+  ultimoToqueZoom = ahora;
+}, { passive: false });
+
+// Bloquear zoom con Ctrl + rueda del mouse (laptop/trackpad)
+document.addEventListener('wheel', (e) => {
+  if (e.ctrlKey) e.preventDefault();
+}, { passive: false });
+
 /* ── Estado global ──────────────────────────────────────────── */
 const App = {
   paginaActual : 'inicio',
