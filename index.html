@@ -37,13 +37,29 @@
      SPLASH SCREEN (pantalla de bienvenida mientras carga)
 ══════════════════════════════════════════════════════════════ -->
 <div id="splashScreen" style="position:fixed;inset:0;z-index:9999;background:#0A2647;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s ease;">
-  <img src="img/escudo.png" alt="Codyweb" style="width:80px;height:80px;object-fit:contain;margin-bottom:18px;">
-  <div style="color:#fff;font-size:1.4rem;font-weight:700;letter-spacing:.5px;">Bienvenid@ a Codyweb</div>
-  <div style="margin-top:20px;width:32px;height:32px;border:3px solid rgba(255,255,255,.25);border-top-color:#D4AF37;border-radius:50%;animation:splashSpin 0.8s linear infinite;"></div>
+  <div style="font-size:3.2rem;margin-bottom:18px;">🎓</div>
+  <div style="color:#fff;font-size:1.4rem;font-weight:700;letter-spacing:.5px;display:flex;">
+    <span id="splashTexto"></span><span id="splashCursor" style="display:inline-block;width:3px;background:#D4AF37;margin-left:3px;animation:splashBlink .8s step-end infinite;">&nbsp;</span>
+  </div>
 </div>
 <style>
-@keyframes splashSpin { to { transform: rotate(360deg); } }
+@keyframes splashBlink { 50% { opacity:0; } }
 </style>
+<script>
+  (function () {
+    const texto = "Bienvenid@ a Codyweb";
+    const el = document.getElementById('splashTexto');
+    let i = 0;
+    function escribir() {
+      if (i <= texto.length) {
+        el.textContent = texto.slice(0, i);
+        i++;
+        setTimeout(escribir, 70);
+      }
+    }
+    escribir();
+  })();
+</script>
 
 
 <div class="toast-container" id="toastContainer"></div>
@@ -926,14 +942,14 @@
     });
   }
 
-  // Splash screen — desaparece cuando termina de cargar todo
+  // Splash screen — desaparece cuando termina de cargar todo (y ya se vio la animación)
   window.addEventListener('load', () => {
     const splash = document.getElementById('splashScreen');
     if (splash) {
       setTimeout(() => {
         splash.style.opacity = '0';
         setTimeout(() => splash.remove(), 500);
-      }, 400);
+      }, 1800);
     }
   });
 </script>
