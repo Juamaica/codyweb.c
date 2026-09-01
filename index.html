@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Codyweb.com - Inicio</title>
   <link rel="stylesheet" href="style.css">
 
@@ -440,8 +440,8 @@
           </select>
           <button class="btn btn-primary" onclick="cargarAsistencias()">🔍 Filtrar</button>
           <button class="btn btn-success" onclick="exportarAsistencias()">📤 Exportar Excel</button>
-          <button class="btn btn-outline" onclick="abrirModalLicencia()">📄 Registrar licencia</button>
-          <button class="btn btn-outline" onclick="abrirModalFalta()">➕ Marcar falta</button>
+          <button class="btn btn-warning" onclick="abrirModalLicencia()">📄 Registrar licencia</button>
+          <button class="btn btn-warning" onclick="abrirModalFalta()">➕ Marcar falta</button>
         </div>
       </div>
 
@@ -816,7 +816,7 @@
 <!-- Modal Licencia -->
 <div class="modal-overlay" id="modalLicencia">
   <div class="modal">
-    <div class="modal-header">
+    <div class="modal-header accent-gold">
       <span class="modal-title">📄 Registrar licencia</span>
       <button class="modal-close" onclick="cerrarModal('modalLicencia')">✕</button>
     </div>
@@ -855,7 +855,7 @@
 <!-- Modal Marcar Falta -->
 <div class="modal-overlay" id="modalFalta">
   <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
+    <div class="modal-header accent-danger">
       <span class="modal-title">➕ Marcar falta</span>
       <button class="modal-close" onclick="cerrarModal('modalFalta')">✕</button>
     </div>
