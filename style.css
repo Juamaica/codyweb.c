@@ -1043,18 +1043,18 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 .custom-select.open .csel-arrow { transform: rotate(180deg); color: var(--gold); }
 
 .custom-select-panel {
-  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  position: fixed;
   background: var(--navy);
   border-radius: 12px;
   box-shadow: 0 16px 40px rgba(10,22,40,.35);
   padding: 6px;
-  z-index: 500;
+  z-index: 600;
   max-height: 260px; overflow-y: auto;
   opacity: 0; transform: translateY(-6px) scale(.98);
   pointer-events: none;
   transition: opacity var(--trans), transform var(--trans);
 }
-.custom-select.open .custom-select-panel {
+.custom-select-panel.open {
   opacity: 1; transform: none; pointer-events: all;
 }
 .custom-select-option {
