@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Codyweb.com - Ingresar</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0A2647">
   <link rel="icon" href="icons/icon-192.png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
 </head>
 <body class="login-body">
 
@@ -26,9 +26,9 @@
         </div>
         <h1 class="login-colegio">U.E. Juana Azurduy de Padilla</h1>
         <p class="login-sede">Satélite Norte · Warnes</p>
-        <p class="login-app">Sistema de Asistencia Estudiantil</p>
+        <p class="login-app">📋 Sistema de Asistencia Estudiantil</p>
 
-        <button class="btn-login-main" onclick="mostrarVista('login')">Ingresar</button>
+        <button class="btn-login-main" onclick="mostrarVista('login')">Ingresar →</button>
       </div>
 
       <!-- ── VISTA 2: Iniciar sesión ─────────────────────── -->
@@ -42,11 +42,11 @@
         <div class="login-msg" id="loginMsg"></div>
 
         <form id="formLogin" onsubmit="return enviarLogin(event)">
-          <div class="login-group">
+          <div class="login-group" data-icon="✉️">
             <label>Correo electrónico</label>
             <input type="email" id="loginCorreo" placeholder="tucorreo@ejemplo.com" required>
           </div>
-          <div class="login-group">
+          <div class="login-group" data-icon="🔒">
             <label>Contraseña</label>
             <input type="password" id="loginPassword" placeholder="••••••••" required>
           </div>
@@ -69,19 +69,19 @@
         <div class="login-msg" id="regMsg"></div>
 
         <form id="formRegistro" onsubmit="return enviarRegistro(event)">
-          <div class="login-group">
+          <div class="login-group" data-icon="🙍">
             <label>Nombre completo</label>
             <input type="text" id="regNombre" placeholder="Ej: Ana Flores" required>
           </div>
-          <div class="login-group">
+          <div class="login-group" data-icon="✉️">
             <label>Correo electrónico</label>
             <input type="email" id="regCorreo" placeholder="tucorreo@ejemplo.com" required>
           </div>
-          <div class="login-group">
+          <div class="login-group" data-icon="🔒">
             <label>Contraseña</label>
             <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required>
           </div>
-          <div class="login-group">
+          <div class="login-group" data-icon="🔒">
             <label>Confirmar contraseña</label>
             <input type="password" id="regPassword2" placeholder="Repite tu contraseña" required>
           </div>
