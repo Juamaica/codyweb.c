@@ -381,35 +381,37 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   font-family: inherit;
 }
 .btn:active { transform: scale(.97); }
+.btn:hover:not(:disabled) { transform: translateY(-2px); }
 .btn-primary {
   background: var(--navy-mid); color: var(--white);
   border-color: var(--navy-mid);
 }
-.btn-primary:hover { background: var(--navy); border-color: var(--navy); }
+.btn-primary:hover { background: var(--navy); border-color: var(--navy); box-shadow: 0 6px 16px rgba(10,22,40,.25); }
 
 .btn-gold {
   background: var(--gold); color: var(--navy);
   border-color: var(--gold);
 }
-.btn-gold:hover { background: var(--gold-light); box-shadow: 0 4px 12px rgba(201,162,39,.4); }
+.btn-gold:hover { background: var(--gold-light); box-shadow: 0 6px 16px rgba(201,162,39,.4); }
 
 .btn-success { background: var(--green); color: #fff; border-color: var(--green); }
-.btn-success:hover { background: #16A34A; }
+.btn-success:hover { background: #16A34A; box-shadow: 0 6px 16px rgba(34,197,94,.35); }
 
 .btn-danger  { background: var(--red);  color: #fff; border-color: var(--red); }
-.btn-danger:hover  { background: #DC2626; }
+.btn-danger:hover  { background: #DC2626; box-shadow: 0 6px 16px rgba(239,68,68,.35); }
+
+.btn-warning:hover { background: #FCEFC7; border-color: var(--gold); box-shadow: 0 6px 16px rgba(201,162,39,.25); }
 
 .btn-outline {
   background: transparent; color: var(--navy-mid);
   border-color: var(--border);
 }
-.btn-outline:hover { background: var(--surface); border-color: var(--navy-light); }
+.btn-outline:hover { background: var(--surface); border-color: var(--navy-light); box-shadow: 0 4px 12px rgba(10,22,40,.08); }
 
 .btn-warning {
   background: #FFF8E7; color: #8A6D1B;
   border-color: #F0D989;
 }
-.btn-warning:hover { background: #FCEFC7; border-color: var(--gold); }
 
 .btn-sm { padding: 5px 12px; font-size: .78rem; border-radius: 7px; }
 .btn-icon { padding: 8px; border-radius: 8px; }
@@ -417,7 +419,7 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 /* ═══════════════════════════════════════════════════════════
    FORMULARIOS
    ═══════════════════════════════════════════════════════════ */
-.form-group { margin-bottom: 16px; }
+.form-group { margin-bottom: 16px; position: relative; }
 .form-label {
   display: block; font-size: .78rem; font-weight: 600;
   color: var(--navy-mid); margin-bottom: 5px; letter-spacing: .3px;
@@ -429,6 +431,15 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   color: var(--text-main); background: var(--white);
   transition: border-color var(--trans), box-shadow var(--trans);
   font-family: inherit;
+}
+.form-group[data-icon] .form-control { padding-left: 36px; }
+.form-group[data-icon]::after {
+  content: attr(data-icon);
+  position: absolute;
+  left: 12px; top: 33px;
+  font-size: .92rem;
+  opacity: .6;
+  pointer-events: none;
 }
 .form-control:focus {
   outline: none;
