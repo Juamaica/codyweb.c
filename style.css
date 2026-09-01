@@ -405,6 +405,12 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 }
 .btn-outline:hover { background: var(--surface); border-color: var(--navy-light); }
 
+.btn-warning {
+  background: #FFF8E7; color: #8A6D1B;
+  border-color: #F0D989;
+}
+.btn-warning:hover { background: #FCEFC7; border-color: var(--gold); }
+
 .btn-sm { padding: 5px 12px; font-size: .78rem; border-radius: 7px; }
 .btn-icon { padding: 8px; border-radius: 8px; }
 
@@ -485,6 +491,8 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   display: flex; align-items: center; justify-content: space-between;
 }
 .modal-title { font-size: 1.1rem; font-weight: 800; color: var(--navy); }
+.modal-header.accent-gold { border-bottom-color: transparent; background: linear-gradient(135deg, #FFF8E7, #fff); border-radius: 16px 16px 0 0; }
+.modal-header.accent-danger { background: linear-gradient(135deg, #FEF2F2, #fff); border-radius: 16px 16px 0 0; }
 .modal-close {
   background: var(--surface); border: none; border-radius: 8px;
   width: 34px; height: 34px; font-size: 1.1rem; cursor: pointer;
@@ -866,8 +874,29 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   width: 100%;
   background: linear-gradient(160deg, var(--navy) 0%, var(--navy-mid) 55%, #153050 100%);
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+/* Formas decorativas de fondo */
+.login-body::before, .login-body::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+}
+.login-body::before {
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, rgba(201,162,39,.35), transparent 70%);
+  top: -140px; right: -120px;
+}
+.login-body::after {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, rgba(45,82,130,.55), transparent 70%);
+  bottom: -160px; left: -100px;
 }
 .login-wrap {
+  position: relative; z-index: 1;
   width: 100%;
   max-width: 420px;
   display: flex;
@@ -882,13 +911,27 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   padding: 40px 34px;
   text-align: center;
   position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
 }
 .login-view { animation: loginFade .25s ease; }
 @keyframes loginFade { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
 
-.login-logo { margin-bottom: 18px; }
-.login-logo img { width: 120px; height: auto; }
-.login-logo-sm img { width: 72px; }
+.login-logo { margin-bottom: 18px; display: flex; justify-content: center; }
+.login-logo img {
+  width: 130px; height: 130px;
+  object-fit: contain;
+  padding: 8px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 0 0 3px var(--surface-2), 0 0 0 6px rgba(201,162,39,.35), 0 8px 24px rgba(10,22,40,.15);
+}
+.login-logo-sm img { width: 78px; height: 78px; padding: 6px; }
 
 .login-colegio { font-size: 1.25rem; font-weight: 800; color: var(--navy); line-height: 1.3; }
 .login-sede { font-size: .85rem; color: var(--text-muted); margin-top: 2px; }
@@ -921,19 +964,31 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 }
 .login-back:hover { color: var(--navy); }
 
-.login-group { text-align: left; margin-bottom: 14px; }
+.login-group { text-align: left; margin-bottom: 14px; position: relative; }
 .login-group label { display: block; font-size: .8rem; font-weight: 600; color: var(--navy-mid); margin-bottom: 6px; }
 .login-group input {
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px 14px 12px 42px;
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: .92rem;
   font-family: inherit;
   color: var(--text-main);
   background: var(--surface);
+  transition: border-color var(--trans), background var(--trans), box-shadow var(--trans);
 }
-.login-group input:focus { outline: none; border-color: var(--navy-light); background: var(--white); }
+.login-group input:focus {
+  outline: none; border-color: var(--navy-light); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(30,58,95,.10);
+}
+.login-group::after {
+  content: attr(data-icon);
+  position: absolute;
+  left: 13px; top: 38px;
+  font-size: 1rem;
+  opacity: .55;
+  pointer-events: none;
+}
 
 .login-swap { margin-top: 20px; font-size: .85rem; color: var(--text-muted); }
 .login-swap a { color: var(--navy-mid); font-weight: 700; cursor: pointer; text-decoration: underline; }
