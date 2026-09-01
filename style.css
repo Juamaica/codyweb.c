@@ -1,9 +1,3 @@
-/* ============================================================
-   CODYWEB.COM — style.css
-   U.E. Juana Azurduy de Padilla
-   Paleta: Azul marino #0A1628 | Azul medio #1E3A5F | Dorado #C9A227
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* ── Variables ───────────────────────────────────────────── */
@@ -32,7 +26,7 @@
 
 /* ── Reset ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 15px; scroll-behavior: smooth; }
+html { font-size: 15px; scroll-behavior: smooth; overscroll-behavior-y: contain; }
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--surface);
@@ -40,6 +34,7 @@ body {
   min-height: 100vh;
   display: flex;
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
 }
 
 /* ── Scrollbar personalizada ──────────────────────────────── */
