@@ -4,13 +4,37 @@
    por un dropdown con el diseño navy/dorado de la app, sin tocar
    la lógica existente (script.js sigue leyendo/escribiendo
    sobre el <select> original con normalidad).
+
+   El panel se dibuja "flotando" pegado al body (position: fixed)
+   para que no lo recorten contenedores con overflow:hidden
+   (tarjetas, modales, tablas, etc).
    ============================================================ */
 (function () {
+
+  var openPanel = null; // { panel, wrap }
 
   function closeAll() {
     document.querySelectorAll('.custom-select.open').forEach(function (el) {
       el.classList.remove('open');
     });
+    if (openPanel) {
+      openPanel.classList.remove('open');
+      openPanel = null;
+    }
+  }
+
+  function positionPanel(trigger, panel) {
+    var rect = trigger.getBoundingClientRect();
+    var vh = window.innerHeight;
+    panel.style.left = rect.left + 'px';
+    panel.style.width = rect.width + 'px';
+    var panelHeight = panel.scrollHeight || 200;
+    var spaceBelow = vh - rect.bottom;
+    if (spaceBelow < panelHeight + 12 && rect.top > panelHeight + 12) {
+      panel.style.top = (rect.top - panelHeight - 6) + 'px';
+    } else {
+      panel.style.top = (rect.bottom + 6) + 'px';
+    }
   }
 
   function buildPanel(sel, panel, label) {
@@ -75,9 +99,11 @@
     trigger.appendChild(arrow);
     wrap.appendChild(trigger);
 
+    // El panel se agrega al <body>, no dentro de wrap, así ninguna
+    // tarjeta/modal con overflow:hidden lo recorta.
     var panel = document.createElement('div');
     panel.className = 'custom-select-panel';
-    wrap.appendChild(panel);
+    document.body.appendChild(panel);
 
     function rebuild() { buildPanel(sel, panel, label); }
     rebuild();
@@ -89,7 +115,10 @@
       closeAll();
       if (!isOpen) {
         rebuild(); // refresca por si el valor cambió desde script.js
+        positionPanel(trigger, panel);
         wrap.classList.add('open');
+        panel.classList.add('open');
+        openPanel = panel;
       }
     });
 
@@ -106,6 +135,10 @@
   }
 
   document.addEventListener('click', closeAll);
+  // Cerrar si la página (o cualquier contenedor con scroll) se mueve,
+  // para no dejar el panel flotando en el lugar equivocado.
+  window.addEventListener('scroll', closeAll, true);
+  window.addEventListener('resize', closeAll);
 
   if (document.readyState !== 'loading') {
     enhanceAll();
