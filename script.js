@@ -1514,73 +1514,106 @@ async function guardarFalta() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   TUTORIAL / GUÍA PASO A PASO
+   TUTORIAL / GUÍA INTERACTIVA (spotlight — resalta el botón real)
 ═══════════════════════════════════════════════════════════════ */
 const pasosTutorial = [
-  {
-    icono: '👋',
-    titulo: 'Bienvenido a Codyweb',
-    desc: 'Este es tu sistema de gestión y control de asistencia estudiantil. Te mostramos rápido cómo usarlo.',
-  },
-  {
-    icono: '🏠',
-    titulo: 'Inicio',
-    desc: 'Tu panel principal: cuántos estudiantes tienes, asistencias del día, y gráficas por curso, todo de un vistazo.',
-  },
-  {
-    icono: '👨‍🎓',
-    titulo: 'Estudiantes',
-    desc: 'Registra estudiantes uno por uno, o importa una lista completa desde Excel (CSV). Aquí también editas o desactivas.',
-  },
-  {
-    icono: '📱',
-    titulo: 'Códigos QR',
-    desc: 'Cada estudiante tiene un QR permanente. Descárgalo o imprímelo para que lo use todos los días.',
-  },
-  {
-    icono: '📷',
-    titulo: 'Escanear',
-    desc: 'Activa la cámara para leer el QR del estudiante y registrar su asistencia al instante. También puedes subir una foto o ingresar el código manual.',
-  },
-  {
-    icono: '✅',
-    titulo: 'Asistencias',
-    desc: 'Revisa el registro diario, filtra por curso o turno, registra licencias médicas o marca faltas manuales.',
-  },
-  {
-    icono: '📊',
-    titulo: 'Reportes',
-    desc: 'Genera reportes mensuales por curso, con gráficas de tendencia y porcentaje de asistencia. Exporta todo a Excel.',
-  },
-  {
-    icono: '⚙️',
-    titulo: '¿Necesitas ayuda de nuevo?',
-    desc: 'Toca el botón dorado con "?" en cualquier momento, abajo a la derecha, para volver a ver esta guía.',
-  },
+  { selector: '[data-page="inicio"]',        titulo: 'Inicio',        desc: 'Toca aquí para ver tu resumen general: estudiantes, asistencias de hoy y gráficas por curso.' },
+  { selector: '[data-page="estudiantes"]',   titulo: 'Estudiantes',   desc: 'Aquí registras estudiantes uno por uno, o importas una lista completa desde Excel.' },
+  { selector: '[data-page="qr"]',            titulo: 'Códigos QR',    desc: 'Aquí generas y descargas el QR permanente de cada estudiante.' },
+  { selector: '[data-page="escanear"]',      titulo: 'Escanear',      desc: 'Toca aquí para activar la cámara y registrar asistencia leyendo el QR del estudiante.' },
+  { selector: '[data-page="asistencias"]',   titulo: 'Asistencias',   desc: 'Aquí revisas el registro diario, filtras por curso, y registras licencias o faltas.' },
+  { selector: '[data-page="reportes"]',      titulo: 'Reportes',      desc: 'Genera reportes mensuales con gráficas y exporta todo a Excel desde aquí.' },
+  { selector: '[data-page="configuracion"]', titulo: 'Configuración', desc: 'Aquí defines los datos del colegio, horarios y los cursos registrados.' },
+  { selector: '.nav-item-logout',            titulo: 'Cerrar sesión', desc: 'Toca aquí cuando quieras salir del sistema de forma segura.' },
+  { selector: '.btn-help-float',             titulo: '¿Necesitas ayuda de nuevo?', desc: 'Toca este botón dorado en cualquier momento para volver a ver esta guía.' },
 ];
 
 let pasoTutorialActual = 0;
+let tourAbrioSidebar   = false;
+
+function elementoDelPaso(i) {
+  return document.querySelector(pasosTutorial[i].selector);
+}
+
+// Mueve el "recuadro iluminado" y la burbuja hacia el elemento real
+function posicionarCoach(target) {
+  const rect = target.getBoundingClientRect();
+  const pad  = 6;
+
+  const highlight = document.getElementById('coachHighlight');
+  highlight.style.top    = (rect.top - pad) + 'px';
+  highlight.style.left   = (rect.left - pad) + 'px';
+  highlight.style.width  = (rect.width + pad * 2) + 'px';
+  highlight.style.height = (rect.height + pad * 2) + 'px';
+
+  const tooltip = document.getElementById('coachTooltip');
+  tooltip.style.visibility = 'hidden';
+  requestAnimationFrame(() => {
+    const tw = tooltip.offsetWidth;
+    const th = tooltip.offsetHeight;
+    let top, left, arrow;
+
+    if (window.innerWidth - rect.right > tw + 24) {
+      // Hay espacio a la derecha del elemento — la burbuja va ahí
+      left  = rect.right + 18;
+      top   = Math.min(rect.top, window.innerHeight - th - 16);
+      arrow = 'left';
+    } else {
+      // Sin espacio a la derecha (celular) — la burbuja va debajo
+      left  = Math.max(16, Math.min(rect.left, window.innerWidth - tw - 16));
+      top   = rect.bottom + 14;
+      arrow = 'top';
+      if (top + th > window.innerHeight - 16) {
+        top   = Math.max(16, rect.top - th - 14);
+        arrow = 'bottom';
+      }
+    }
+    tooltip.style.top  = top + 'px';
+    tooltip.style.left = left + 'px';
+    tooltip.classList.remove('arrow-left', 'arrow-top', 'arrow-bottom');
+    tooltip.classList.add('arrow-' + arrow);
+    tooltip.style.visibility = 'visible';
+  });
+}
 
 function renderPasoTutorial() {
   const paso = pasosTutorial[pasoTutorialActual];
-  document.getElementById('tutorialIcon').textContent   = paso.icono;
-  document.getElementById('tutorialTitulo').textContent = paso.titulo;
-  document.getElementById('tutorialDesc').textContent   = paso.desc;
-  document.getElementById('tutorialProgress').textContent =
+
+  // En celular, el sidebar está oculto — hay que abrirlo para poder iluminarlo
+  const esItemSidebar = paso.selector !== '.btn-help-float';
+  const esMobile = window.innerWidth <= 720;
+  if (esMobile) {
+    const sidebar = document.getElementById('sidebar');
+    if (esItemSidebar && !sidebar.classList.contains('open')) {
+      toggleSidebar();
+      tourAbrioSidebar = true;
+    } else if (!esItemSidebar && tourAbrioSidebar) {
+      toggleSidebar();
+      tourAbrioSidebar = false;
+    }
+  }
+
+  // Esperar a que termine la animación de apertura del sidebar antes de medir
+  setTimeout(() => {
+    const target = elementoDelPaso(pasoTutorialActual);
+    if (!target) { siguientePasoTutorial(); return; }
+    posicionarCoach(target);
+  }, esMobile ? 260 : 0);
+
+  document.getElementById('coachTitulo').textContent = paso.titulo;
+  document.getElementById('coachDesc').textContent   = paso.desc;
+  document.getElementById('coachProgress').textContent =
     `${pasoTutorialActual + 1} / ${pasosTutorial.length}`;
 
-  // Puntitos
-  const dotsWrap = document.getElementById('tutorialDots');
+  const dotsWrap = document.getElementById('coachDots');
   dotsWrap.innerHTML = pasosTutorial.map((_, i) =>
-    `<span class="tutorial-dot ${i === pasoTutorialActual ? 'active' : ''}"></span>`
+    `<span class="coach-dot ${i === pasoTutorialActual ? 'active' : ''}"></span>`
   ).join('');
 
-  // Botón atrás visible solo si no es el primer paso
-  document.getElementById('btnTutorialAtras').style.display =
+  document.getElementById('btnCoachAtras').style.display =
     pasoTutorialActual === 0 ? 'none' : 'inline-flex';
 
-  // Último paso: el botón dice "Entendido"
-  const btnSiguiente = document.getElementById('btnTutorialSiguiente');
+  const btnSiguiente = document.getElementById('btnCoachSiguiente');
   btnSiguiente.textContent = pasoTutorialActual === pasosTutorial.length - 1
     ? '✓ Entendido'
     : 'Siguiente →';
@@ -1604,12 +1637,17 @@ function anteriorPasoTutorial() {
 
 function abrirTutorial() {
   pasoTutorialActual = 0;
+  tourAbrioSidebar   = false;
+  document.getElementById('coachOverlay').classList.add('open');
   renderPasoTutorial();
-  document.getElementById('tutorialOverlay').classList.add('open');
 }
 
 function cerrarTutorial() {
-  document.getElementById('tutorialOverlay').classList.remove('open');
+  document.getElementById('coachOverlay').classList.remove('open');
+  if (tourAbrioSidebar) {
+    toggleSidebar();
+    tourAbrioSidebar = false;
+  }
   localStorage.setItem('codyweb_tutorial_visto', '1');
 }
 
@@ -1618,5 +1656,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const yaVisto = localStorage.getItem('codyweb_tutorial_visto');
   if (!yaVisto) {
     setTimeout(abrirTutorial, 2200); // después de que se cierre el splash screen
+  }
+});
+
+// Reubicar el spotlight si cambia el tamaño de la ventana durante el tour
+window.addEventListener('resize', () => {
+  if (document.getElementById('coachOverlay').classList.contains('open')) {
+    const target = elementoDelPaso(pasoTutorialActual);
+    if (target) posicionarCoach(target);
   }
 });
