@@ -929,26 +929,23 @@
 </div>
 
 <!-- ══════════════════════════════════════════════════════════
-     TUTORIAL / GUÍA PASO A PASO
+     TUTORIAL / GUÍA INTERACTIVA (estilo "spotlight" — resalta
+     el botón real que debes tocar, como en un tutorial de juego)
 ══════════════════════════════════════════════════════════ -->
-<div class="tutorial-overlay" id="tutorialOverlay">
-  <div class="tutorial-modal">
-    <div class="tutorial-header">
-      <span class="tutorial-progress" id="tutorialProgress">1 / 8</span>
-      <button class="tutorial-close" onclick="cerrarTutorial()">✕</button>
+<div class="coach-overlay" id="coachOverlay">
+  <div class="coach-highlight" id="coachHighlight"></div>
+  <div class="coach-tooltip" id="coachTooltip">
+    <div class="coach-tooltip-header">
+      <span class="coach-progress" id="coachProgress">1 / 9</span>
+      <button class="coach-close" onclick="cerrarTutorial()">✕</button>
     </div>
-    <div class="tutorial-body">
-      <div class="tutorial-icon" id="tutorialIcon">👋</div>
-      <h3 class="tutorial-title" id="tutorialTitulo">Bienvenido a Codyweb</h3>
-      <p class="tutorial-desc" id="tutorialDesc">
-        Este es tu sistema de gestión y control de asistencia estudiantil. Te mostramos rápido cómo usarlo.
-      </p>
-    </div>
-    <div class="tutorial-footer">
-      <div class="tutorial-dots" id="tutorialDots"></div>
+    <h4 class="coach-title" id="coachTitulo">Inicio</h4>
+    <p class="coach-desc" id="coachDesc">Aquí ves tu resumen general.</p>
+    <div class="coach-footer">
+      <div class="coach-dots" id="coachDots"></div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline btn-sm" id="btnTutorialAtras" onclick="anteriorPasoTutorial()" style="display:none;">← Atrás</button>
-        <button class="btn btn-gold" id="btnTutorialSiguiente" onclick="siguientePasoTutorial()">Siguiente →</button>
+        <button class="btn btn-outline btn-sm" id="btnCoachAtras" onclick="anteriorPasoTutorial()" style="display:none;">← Atrás</button>
+        <button class="btn btn-gold btn-sm" id="btnCoachSiguiente" onclick="siguientePasoTutorial()">Siguiente →</button>
       </div>
     </div>
   </div>
