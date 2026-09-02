@@ -257,7 +257,6 @@ body {
   margin-top: 2px;
 }
 
-/* Título de bienvenida — más grande solo en pantallas de laptop/escritorio */
 /* Título de bienvenida — escala según tamaño de pantalla */
 .welcome-title { font-size: 1.7rem; }
 @media (min-width: 721px) {
@@ -1117,9 +1116,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 14px 12px; font-size: .8rem;
   color: rgba(255,255,255,.4); text-align: center;
 }
+
 /* ══════════════════════════════════════════════════════════════
    FLATPICKR — Calendario con el diseño de Codyweb
-   Agrega este bloque al FINAL de tu style.css
 ═══════════════════════════════════════════════════════════════ */
 
 /* Input con altInput (lo que ve el usuario) */
