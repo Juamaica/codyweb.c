@@ -1512,11 +1512,10 @@ async function guardarFalta() {
     toast('Error', res.msg, 'error');
   }
 }
+
 /* ══════════════════════════════════════════════════════════════
    TUTORIAL / GUÍA PASO A PASO
-   Agrega este bloque al FINAL de tu script.js
 ═══════════════════════════════════════════════════════════════ */
-
 const pasosTutorial = [
   {
     icono: '👋',
@@ -1621,7 +1620,3 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(abrirTutorial, 2200); // después de que se cierre el splash screen
   }
 });
-
-@media (max-width: 480px) {
-  .btn-help-float { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 1.1rem; }
-}
