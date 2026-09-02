@@ -792,7 +792,12 @@ async function iniciarAsistencias() {
   await cargarCursosFiltros('asistCurso');
   // Fecha por defecto = hoy
   const hoy = new Date().toISOString().slice(0, 10);
-  document.getElementById('asistFecha').value = hoy;
+  const inputFecha = document.getElementById('asistFecha');
+  if (inputFecha._flatpickr) {
+    inputFecha._flatpickr.setDate(hoy, true);
+  } else {
+    inputFecha.value = hoy;
+  }
   cargarAsistencias();
 }
 
@@ -1238,12 +1243,11 @@ async function llenarSelectCursos(selectId, seleccionado = null) {
   ).join('');
 }
 
-function confirmarCerrarSesion() {
-  if (confirm("¿Estás seguro que deseas cerrar sesión?")) {
-    sb.auth.signOut().then(() => {
-      window.location.href = "login.html";
-    });
-  }
+/* Cerrar sesión — ahora usa el modal propio (#modalLogout) en vez de confirm() nativo */
+function cerrarSesionConfirmada() {
+  sb.auth.signOut().then(() => {
+    window.location.href = "login.html";
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1256,6 +1260,16 @@ document.addEventListener('DOMContentLoaded', () => {
   cargarBrandingInicial();
   // Página inicial
   cargarInicio();
+
+  // Flatpickr con diseño propio en todos los campos de fecha
+  flatpickr.localize(flatpickr.l10ns.es);
+  flatpickr(".flatpickr-date", {
+    dateFormat: "Y-m-d",   // valor real guardado (compatible con tu backend/Supabase)
+    altInput: true,
+    altFormat: "d/m/Y",    // lo que ve el usuario
+    disableMobile: true,
+    locale: "es",
+  });
 });
 
 /* ══════════════════════════════════════════════════════════════
@@ -1397,8 +1411,10 @@ async function cargarReporteIndividual() {
    LICENCIAS
 ═══════════════════════════════════════════════════════════════ */
 async function abrirModalLicencia() {
-  document.getElementById('licFechaInicio').value = '';
-  document.getElementById('licFechaFin').value = '';
+  const inicio = document.getElementById('licFechaInicio');
+  const fin    = document.getElementById('licFechaFin');
+  if (inicio._flatpickr) inicio._flatpickr.clear(); else inicio.value = '';
+  if (fin._flatpickr)    fin._flatpickr.clear();    else fin.value = '';
   document.getElementById('licMotivo').value = '';
   document.getElementById('licArchivo').value = '';
 
@@ -1448,7 +1464,13 @@ async function guardarLicencia() {
    MARCAR FALTA (ausencia manual, sin licencia)
 ═══════════════════════════════════════════════════════════════ */
 async function abrirModalFalta() {
-  document.getElementById('faltaFecha').value = new Date().toISOString().slice(0, 10);
+  const hoy = new Date().toISOString().slice(0, 10);
+  const inputFalta = document.getElementById('faltaFecha');
+  if (inputFalta._flatpickr) {
+    inputFalta._flatpickr.setDate(hoy, true);
+  } else {
+    inputFalta.value = hoy;
+  }
 
   const res = await get('listar.php?accion=estudiantes&estado=Activo');
   const lista = res.data || [];
