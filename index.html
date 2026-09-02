@@ -928,6 +928,35 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     TUTORIAL / GUÍA PASO A PASO
+══════════════════════════════════════════════════════════ -->
+<div class="tutorial-overlay" id="tutorialOverlay">
+  <div class="tutorial-modal">
+    <div class="tutorial-header">
+      <span class="tutorial-progress" id="tutorialProgress">1 / 8</span>
+      <button class="tutorial-close" onclick="cerrarTutorial()">✕</button>
+    </div>
+    <div class="tutorial-body">
+      <div class="tutorial-icon" id="tutorialIcon">👋</div>
+      <h3 class="tutorial-title" id="tutorialTitulo">Bienvenido a Codyweb</h3>
+      <p class="tutorial-desc" id="tutorialDesc">
+        Este es tu sistema de gestión y control de asistencia estudiantil. Te mostramos rápido cómo usarlo.
+      </p>
+    </div>
+    <div class="tutorial-footer">
+      <div class="tutorial-dots" id="tutorialDots"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" id="btnTutorialAtras" onclick="anteriorPasoTutorial()" style="display:none;">← Atrás</button>
+        <button class="btn btn-gold" id="btnTutorialSiguiente" onclick="siguientePasoTutorial()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Botón flotante para volver a abrir el tutorial cuando quieras -->
+<button class="btn-help-float" onclick="abrirTutorial()" title="Ver guía de uso">?</button>
+
 <!-- Puente hacia Supabase -->
 <script src="api.js"></script>
 <script src="script.js"></script>
