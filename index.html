@@ -14,6 +14,11 @@
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-180.png">
 
+  <!-- Flatpickr (calendario con diseño propio) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/es.js"></script>
+
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabaseClient.js"></script>
@@ -115,7 +120,7 @@
     <div class="nav-item" data-page="configuracion" onclick="navTo('configuracion', this)">
       <span class="nav-icon">⚙️</span> Configuración
     </div>
-    <div class="nav-item nav-item-logout" onclick="confirmarCerrarSesion()">
+    <div class="nav-item nav-item-logout" onclick="abrirModal('modalLogout')">
       <span class="nav-icon">🚪</span> Cerrar Sesión
     </div>
   </nav>
@@ -459,7 +464,7 @@
       <div class="section-header">
         <div class="section-title">Asistencias <small>Registro diario</small></div>
         <div class="toolbar">
-          <input class="form-control" type="date" id="asistFecha" style="width:auto;">
+          <input class="form-control flatpickr-date" type="text" id="asistFecha" style="width:auto;">
           <select class="form-control" id="asistCurso" style="min-width:180px;">
             <option value="">Todos los cursos</option>
           </select>
@@ -858,11 +863,11 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Fecha inicio *</label>
-          <input class="form-control" type="date" id="licFechaInicio">
+          <input class="form-control flatpickr-date" type="text" id="licFechaInicio">
         </div>
         <div class="form-group">
           <label class="form-label">Fecha fin *</label>
-          <input class="form-control" type="date" id="licFechaFin">
+          <input class="form-control flatpickr-date" type="text" id="licFechaFin">
         </div>
       </div>
       <div class="form-group" data-icon="📝">
@@ -896,12 +901,29 @@
       </div>
       <div class="form-group">
         <label class="form-label">Fecha *</label>
-        <input class="form-control" type="date" id="faltaFecha">
+        <input class="form-control flatpickr-date" type="text" id="faltaFecha">
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="cerrarModal('modalFalta')">Cancelar</button>
       <button class="btn btn-gold" id="btnGuardarFalta" onclick="guardarFalta()">💾 Marcar como ausente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cerrar Sesión -->
+<div class="modal-overlay" id="modalLogout">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header accent-danger">
+      <span class="modal-title">🚪 Cerrar sesión</span>
+      <button class="modal-close" onclick="cerrarModal('modalLogout')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.92rem;color:var(--text-muted);">¿Estás seguro que deseas cerrar sesión?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modalLogout')">Cancelar</button>
+      <button class="btn btn-danger" onclick="cerrarSesionConfirmada()">🚪 Sí, cerrar sesión</button>
     </div>
   </div>
 </div>
