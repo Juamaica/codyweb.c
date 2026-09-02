@@ -1512,3 +1512,106 @@ async function guardarFalta() {
     toast('Error', res.msg, 'error');
   }
 }
+/* ══════════════════════════════════════════════════════════════
+   TUTORIAL / GUÍA PASO A PASO
+   Agrega este bloque al FINAL de tu style.css
+═══════════════════════════════════════════════════════════════ */
+
+.tutorial-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,22,40,.6);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--trans);
+}
+.tutorial-overlay.open { opacity: 1; pointer-events: all; }
+
+.tutorial-modal {
+  background: var(--white);
+  border-radius: 18px;
+  width: 100%; max-width: 380px;
+  box-shadow: 0 24px 64px rgba(10,22,40,.35);
+  overflow: hidden;
+  transform: translateY(16px) scale(.97);
+  transition: transform var(--trans);
+}
+.tutorial-overlay.open .tutorial-modal { transform: none; }
+
+.tutorial-header {
+  background: linear-gradient(120deg, var(--navy) 0%, var(--navy-mid) 60%, var(--navy-light) 100%);
+  padding: 16px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.tutorial-progress {
+  color: var(--gold-light);
+  font-weight: 700; font-size: .82rem; letter-spacing: .5px;
+}
+.tutorial-close {
+  background: rgba(255,255,255,.15); border: none; border-radius: 8px;
+  width: 30px; height: 30px; color: #fff; font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--trans);
+}
+.tutorial-close:hover { background: rgba(255,255,255,.28); }
+
+.tutorial-body {
+  padding: 32px 26px 20px;
+  text-align: center;
+}
+.tutorial-icon {
+  font-size: 2.6rem;
+  margin-bottom: 14px;
+}
+.tutorial-title {
+  font-size: 1.2rem; font-weight: 800; color: var(--navy);
+  margin-bottom: 10px;
+}
+.tutorial-desc {
+  font-size: .9rem; color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.tutorial-footer {
+  padding: 16px 20px 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.tutorial-dots {
+  display: flex; gap: 6px;
+}
+.tutorial-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border);
+  transition: background var(--trans), transform var(--trans);
+}
+.tutorial-dot.active {
+  background: var(--gold);
+  transform: scale(1.3);
+}
+
+/* Botón flotante "?" */
+.btn-help-float {
+  position: fixed;
+  bottom: 22px; right: 22px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--navy);
+  border: none;
+  font-size: 1.3rem; font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(201,162,39,.45);
+  z-index: 300;
+  transition: transform var(--trans), box-shadow var(--trans);
+}
+.btn-help-float:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 28px rgba(201,162,39,.55);
+}
+
+@media (max-width: 480px) {
+  .btn-help-float { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 1.1rem; }
+}
