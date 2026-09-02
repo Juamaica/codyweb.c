@@ -1514,103 +1514,113 @@ async function guardarFalta() {
 }
 /* ══════════════════════════════════════════════════════════════
    TUTORIAL / GUÍA PASO A PASO
-   Agrega este bloque al FINAL de tu style.css
+   Agrega este bloque al FINAL de tu script.js
 ═══════════════════════════════════════════════════════════════ */
 
-.tutorial-overlay {
-  position: fixed; inset: 0;
-  background: rgba(10,22,40,.6);
-  backdrop-filter: blur(4px);
-  z-index: 500;
-  display: flex; align-items: center; justify-content: center;
-  padding: 16px;
-  opacity: 0; pointer-events: none;
-  transition: opacity var(--trans);
-}
-.tutorial-overlay.open { opacity: 1; pointer-events: all; }
+const pasosTutorial = [
+  {
+    icono: '👋',
+    titulo: 'Bienvenido a Codyweb',
+    desc: 'Este es tu sistema de gestión y control de asistencia estudiantil. Te mostramos rápido cómo usarlo.',
+  },
+  {
+    icono: '🏠',
+    titulo: 'Inicio',
+    desc: 'Tu panel principal: cuántos estudiantes tienes, asistencias del día, y gráficas por curso, todo de un vistazo.',
+  },
+  {
+    icono: '👨‍🎓',
+    titulo: 'Estudiantes',
+    desc: 'Registra estudiantes uno por uno, o importa una lista completa desde Excel (CSV). Aquí también editas o desactivas.',
+  },
+  {
+    icono: '📱',
+    titulo: 'Códigos QR',
+    desc: 'Cada estudiante tiene un QR permanente. Descárgalo o imprímelo para que lo use todos los días.',
+  },
+  {
+    icono: '📷',
+    titulo: 'Escanear',
+    desc: 'Activa la cámara para leer el QR del estudiante y registrar su asistencia al instante. También puedes subir una foto o ingresar el código manual.',
+  },
+  {
+    icono: '✅',
+    titulo: 'Asistencias',
+    desc: 'Revisa el registro diario, filtra por curso o turno, registra licencias médicas o marca faltas manuales.',
+  },
+  {
+    icono: '📊',
+    titulo: 'Reportes',
+    desc: 'Genera reportes mensuales por curso, con gráficas de tendencia y porcentaje de asistencia. Exporta todo a Excel.',
+  },
+  {
+    icono: '⚙️',
+    titulo: '¿Necesitas ayuda de nuevo?',
+    desc: 'Toca el botón dorado con "?" en cualquier momento, abajo a la derecha, para volver a ver esta guía.',
+  },
+];
 
-.tutorial-modal {
-  background: var(--white);
-  border-radius: 18px;
-  width: 100%; max-width: 380px;
-  box-shadow: 0 24px 64px rgba(10,22,40,.35);
-  overflow: hidden;
-  transform: translateY(16px) scale(.97);
-  transition: transform var(--trans);
-}
-.tutorial-overlay.open .tutorial-modal { transform: none; }
+let pasoTutorialActual = 0;
 
-.tutorial-header {
-  background: linear-gradient(120deg, var(--navy) 0%, var(--navy-mid) 60%, var(--navy-light) 100%);
-  padding: 16px 18px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.tutorial-progress {
-  color: var(--gold-light);
-  font-weight: 700; font-size: .82rem; letter-spacing: .5px;
-}
-.tutorial-close {
-  background: rgba(255,255,255,.15); border: none; border-radius: 8px;
-  width: 30px; height: 30px; color: #fff; font-size: 1rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background var(--trans);
-}
-.tutorial-close:hover { background: rgba(255,255,255,.28); }
+function renderPasoTutorial() {
+  const paso = pasosTutorial[pasoTutorialActual];
+  document.getElementById('tutorialIcon').textContent   = paso.icono;
+  document.getElementById('tutorialTitulo').textContent = paso.titulo;
+  document.getElementById('tutorialDesc').textContent   = paso.desc;
+  document.getElementById('tutorialProgress').textContent =
+    `${pasoTutorialActual + 1} / ${pasosTutorial.length}`;
 
-.tutorial-body {
-  padding: 32px 26px 20px;
-  text-align: center;
-}
-.tutorial-icon {
-  font-size: 2.6rem;
-  margin-bottom: 14px;
-}
-.tutorial-title {
-  font-size: 1.2rem; font-weight: 800; color: var(--navy);
-  margin-bottom: 10px;
-}
-.tutorial-desc {
-  font-size: .9rem; color: var(--text-muted);
-  line-height: 1.5;
-}
+  // Puntitos
+  const dotsWrap = document.getElementById('tutorialDots');
+  dotsWrap.innerHTML = pasosTutorial.map((_, i) =>
+    `<span class="tutorial-dot ${i === pasoTutorialActual ? 'active' : ''}"></span>`
+  ).join('');
 
-.tutorial-footer {
-  padding: 16px 20px 22px;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 10px;
-}
-.tutorial-dots {
-  display: flex; gap: 6px;
-}
-.tutorial-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--border);
-  transition: background var(--trans), transform var(--trans);
-}
-.tutorial-dot.active {
-  background: var(--gold);
-  transform: scale(1.3);
+  // Botón atrás visible solo si no es el primer paso
+  document.getElementById('btnTutorialAtras').style.display =
+    pasoTutorialActual === 0 ? 'none' : 'inline-flex';
+
+  // Último paso: el botón dice "Entendido"
+  const btnSiguiente = document.getElementById('btnTutorialSiguiente');
+  btnSiguiente.textContent = pasoTutorialActual === pasosTutorial.length - 1
+    ? '✓ Entendido'
+    : 'Siguiente →';
 }
 
-/* Botón flotante "?" */
-.btn-help-float {
-  position: fixed;
-  bottom: 22px; right: 22px;
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  color: var(--navy);
-  border: none;
-  font-size: 1.3rem; font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 8px 22px rgba(201,162,39,.45);
-  z-index: 300;
-  transition: transform var(--trans), box-shadow var(--trans);
+function siguientePasoTutorial() {
+  if (pasoTutorialActual < pasosTutorial.length - 1) {
+    pasoTutorialActual++;
+    renderPasoTutorial();
+  } else {
+    cerrarTutorial();
+  }
 }
-.btn-help-float:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 28px rgba(201,162,39,.55);
+
+function anteriorPasoTutorial() {
+  if (pasoTutorialActual > 0) {
+    pasoTutorialActual--;
+    renderPasoTutorial();
+  }
 }
+
+function abrirTutorial() {
+  pasoTutorialActual = 0;
+  renderPasoTutorial();
+  document.getElementById('tutorialOverlay').classList.add('open');
+}
+
+function cerrarTutorial() {
+  document.getElementById('tutorialOverlay').classList.remove('open');
+  localStorage.setItem('codyweb_tutorial_visto', '1');
+}
+
+// Mostrar automáticamente la primera vez que alguien entra al sistema
+document.addEventListener('DOMContentLoaded', () => {
+  const yaVisto = localStorage.getItem('codyweb_tutorial_visto');
+  if (!yaVisto) {
+    setTimeout(abrirTutorial, 2200); // después de que se cierre el splash screen
+  }
+});
 
 @media (max-width: 480px) {
   .btn-help-float { bottom: 16px; right: 16px; width: 46px; height: 46px; font-size: 1.1rem; }
