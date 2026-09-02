@@ -258,9 +258,14 @@ body {
 }
 
 /* Título de bienvenida — más grande solo en pantallas de laptop/escritorio */
+/* Título de bienvenida — escala según tamaño de pantalla */
 .welcome-title { font-size: 1.7rem; }
 @media (min-width: 721px) {
   .welcome-title { font-size: 2.4rem; }
+}
+@media (min-width: 1200px) {
+  .welcome-title { font-size: 3rem; }
+  .section-header p { font-size: 1rem; }
 }
 
 /* ═══════════════════════════════════════════════════════════
