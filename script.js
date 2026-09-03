@@ -340,7 +340,7 @@ async function filtrarEstudiantes() {
 function renderTablaEstudiantes(lista) {
   const tbody = document.getElementById('bodyEstudiantes');
   if (!lista.length) {
-    tbody.innerHTML = `<tr><td colspan="8">
+    tbody.innerHTML = `<tr><td colspan="9">
       <div class="empty-state" style="padding:40px 0;">
         <div class="empty-state-icon">👤</div>
         <h3>Sin resultados</h3>
@@ -349,8 +349,8 @@ function renderTablaEstudiantes(lista) {
     return;
   }
   const badgeEst = { Activo: 'badge-green', Inactivo: 'badge-red' };
-  const badgeGen = { M: 'badge-blue', F: 'badge-purple', Otro: 'badge-gold' };
-  const genTxt   = { M: '♂ Masc.', F: '♀ Fem.', Otro: '⚥ Otro' };
+  const badgeSexo = { V: 'badge-blue', M: 'badge-purple' };
+  const sexoTxt   = { V: '♂ Varón', M: '♀ Mujer' };
 
   tbody.innerHTML = lista.map((e, i) => `
     <tr>
@@ -359,7 +359,8 @@ function renderTablaEstudiantes(lista) {
       <td><strong>${e.apellido}</strong>, ${e.nombre}</td>
       <td>${e.curso_nombre}</td>
       <td>${e.ci || '—'}</td>
-      <td><span class="badge ${badgeGen[e.genero] || 'badge-gold'}">${genTxt[e.genero] || e.genero}</span></td>
+      <td><span class="badge ${badgeSexo[e.sexo] || 'badge-gold'}">${sexoTxt[e.sexo] || e.sexo}</span></td>
+      <td><span class="badge ${e.repitente ? 'badge-orange' : 'badge-blue'}">${e.repitente ? 'Sí' : 'No'}</span></td>
       <td><span class="badge ${badgeEst[e.estado] || 'badge-red'}">${e.estado}</span></td>
       <td>
         <div class="actions-cell">
@@ -376,12 +377,15 @@ function renderTablaEstudiantes(lista) {
 
 /* Abrir modal nuevo estudiante */
 async function abrirModalEstudiante() {
-  document.getElementById('estId').value        = '';
-  document.getElementById('estNombre').value    = '';
-  document.getElementById('estApellido').value  = '';
-  document.getElementById('estCI').value        = '';
-  document.getElementById('estTelefono').value  = '';
-  document.getElementById('estEmail').value     = '';
+  document.getElementById('estId').value              = '';
+  document.getElementById('estNombre').value           = '';
+  document.getElementById('estApellidoPaterno').value  = '';
+  document.getElementById('estApellidoMaterno').value  = '';
+  document.getElementById('estCI').value               = '';
+  document.getElementById('estSexo').value              = 'V';
+  document.getElementById('estRepitente').value         = 'No';
+  document.getElementById('estTelefono').value          = '';
+  document.getElementById('estEmail').value              = '';
   document.getElementById('modalEstTitulo').textContent = 'Nuevo estudiante';
 
   await llenarSelectCursos('estCurso');
@@ -393,12 +397,15 @@ async function editarEstudiante(id) {
   if (!res.ok) return toast('Error', res.msg, 'error');
   const e = res.data;
 
-  document.getElementById('estId').value       = e.id;
-  document.getElementById('estNombre').value   = e.nombre;
-  document.getElementById('estApellido').value = e.apellido;
-  document.getElementById('estCI').value       = e.ci;
-  document.getElementById('estTelefono').value = e.telefono_tutor;
-  document.getElementById('estEmail').value    = e.email;
+  document.getElementById('estId').value              = e.id;
+  document.getElementById('estNombre').value          = e.nombre;
+  document.getElementById('estApellidoPaterno').value = e.apellido_paterno;
+  document.getElementById('estApellidoMaterno').value = e.apellido_materno || '';
+  document.getElementById('estCI').value              = e.ci;
+  document.getElementById('estSexo').value             = e.sexo || 'V';
+  document.getElementById('estRepitente').value        = e.repitente ? 'Si' : 'No';
+  document.getElementById('estTelefono').value         = e.telefono_tutor;
+  document.getElementById('estEmail').value            = e.email;
   document.getElementById('modalEstTitulo').textContent = 'Editar estudiante';
 
   await llenarSelectCursos('estCurso', e.curso_id);
@@ -407,20 +414,22 @@ async function editarEstudiante(id) {
 
 async function guardarEstudiante() {
   const data = {
-    accion  : 'guardar_estudiante',
-    id      : document.getElementById('estId').value,
-    nombre  : document.getElementById('estNombre').value.trim(),
-    apellido: document.getElementById('estApellido').value.trim(),
-    ci      : document.getElementById('estCI').value.trim(),
-    curso_id: document.getElementById('estCurso').value,
-    genero  : document.getElementById('estGenero').value,
-    telefono: document.getElementById('estTelefono').value.trim(),
-    email   : document.getElementById('estEmail').value.trim(),
-    estado  : 'Activo',
+    accion           : 'guardar_estudiante',
+    id               : document.getElementById('estId').value,
+    nombre           : document.getElementById('estNombre').value.trim(),
+    apellido_paterno : document.getElementById('estApellidoPaterno').value.trim(),
+    apellido_materno : document.getElementById('estApellidoMaterno').value.trim(),
+    ci               : document.getElementById('estCI').value.trim(),
+    curso_id         : document.getElementById('estCurso').value,
+    sexo             : document.getElementById('estSexo').value,
+    repitente        : document.getElementById('estRepitente').value === 'Si',
+    telefono         : document.getElementById('estTelefono').value.trim(),
+    email            : document.getElementById('estEmail').value.trim(),
+    estado           : 'Activo',
   };
 
-  if (!data.nombre || !data.apellido || !data.curso_id) {
-    return toast('Campos incompletos', 'Nombre, apellido y curso son obligatorios', 'warn');
+  if (!data.nombre || !data.apellido_paterno || !data.curso_id) {
+    return toast('Campos incompletos', 'Nombres, apellido paterno y curso son obligatorios', 'warn');
   }
 
   const btn = document.getElementById('btnGuardarEstudiante');
@@ -916,12 +925,45 @@ async function iniciarReportes() {
   cargarReporte();
 }
 
+function cambiarTipoPeriodoReporte() {
+  const tipo = document.getElementById('repPeriodoTipo').value;
+  const esMes = tipo === 'mes';
+  document.getElementById('repMes').style.display = esMes ? '' : 'none';
+  document.getElementById('repAnio').style.display = esMes ? '' : 'none';
+  document.getElementById('repTrimestre').style.display = esMes ? 'none' : '';
+  if (!esMes) cargarTrimestresSelectReportes();
+}
+
+async function cargarTrimestresSelectReportes() {
+  const sel = document.getElementById('repTrimestre');
+  const res = await get('listar.php?accion=trimestres');
+  const lista = res.data || [];
+  if (!lista.length) {
+    sel.innerHTML = '<option value="">Sin trimestres configurados</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">Selecciona trimestre...</option>' +
+    lista.map(t => {
+      const ini = t.fecha_inicio.split('-').reverse().join('/');
+      const fin = t.fecha_fin.split('-').reverse().join('/');
+      return `<option value="${t.id}">${t.nombre} (${ini} - ${fin})</option>`;
+    }).join('');
+}
+
 async function cargarReporte() {
-  const mes   = document.getElementById('repMes')?.value   || (new Date().getMonth() + 1);
-  const anio  = document.getElementById('repAnio')?.value  || new Date().getFullYear();
+  const tipo  = document.getElementById('repPeriodoTipo')?.value || 'mes';
   const curso = document.getElementById('repCurso')?.value || '';
 
-  let url = `listar.php?accion=reporte_mensual&mes=${mes}&anio=${anio}`;
+  let url;
+  if (tipo === 'trimestre') {
+    const trimId = document.getElementById('repTrimestre').value;
+    if (!trimId) return toast('Selecciona un trimestre', '', 'warn');
+    url = `listar.php?accion=reporte_trimestral&trimestre_id=${trimId}`;
+  } else {
+    const mes  = document.getElementById('repMes')?.value   || (new Date().getMonth() + 1);
+    const anio = document.getElementById('repAnio')?.value  || new Date().getFullYear();
+    url = `listar.php?accion=reporte_mensual&mes=${mes}&anio=${anio}`;
+  }
   if (curso) url += `&curso_id=${curso}`;
 
   const res  = await get(url);
@@ -1020,10 +1062,18 @@ function dibujarGraficasReporte(data) {
 }
 
 function exportarReporte() {
-  const mes   = document.getElementById('repMes')?.value  || '';
-  const anio  = document.getElementById('repAnio')?.value || '';
+  const tipo  = document.getElementById('repPeriodoTipo')?.value || 'mes';
   const curso = document.getElementById('repCurso')?.value || '';
-  exportarReporteCSV(mes, anio, curso);
+
+  if (tipo === 'trimestre') {
+    const trimId = document.getElementById('repTrimestre').value;
+    if (!trimId) return toast('Selecciona un trimestre', '', 'warn');
+    exportarReporteTrimestralCSV(trimId, curso);
+  } else {
+    const mes  = document.getElementById('repMes')?.value  || '';
+    const anio = document.getElementById('repAnio')?.value || '';
+    exportarReporteCSV(mes, anio, curso);
+  }
   toast('Exportando', 'Descarga iniciada', 'success');
 }
 
@@ -1059,6 +1109,63 @@ async function cargarConfiguracion() {
   `).join('') || `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">Sin cursos</td></tr>`;
 
   activarTablasResponsive();
+
+  // Cargar fechas de los 3 trimestres de la gestión actual
+  const gestionActual = document.getElementById('cfgGestion').value || String(new Date().getFullYear());
+  document.getElementById('trimGestionLabel').textContent = gestionActual;
+
+  const resTrim = await get(`listar.php?accion=trimestres&gestion=${gestionActual}`);
+  App.trimestres = resTrim.data || [];
+
+  const nombresTrim = ['1er Trimestre', '2do Trimestre', '3er Trimestre'];
+  nombresTrim.forEach((nombre, i) => {
+    const n = i + 1;
+    const t = App.trimestres.find(x => x.nombre === nombre);
+    const inicioEl = document.getElementById(`trim${n}Inicio`);
+    const finEl    = document.getElementById(`trim${n}Fin`);
+    if (t) {
+      if (inicioEl._flatpickr) inicioEl._flatpickr.setDate(t.fecha_inicio, true); else inicioEl.value = t.fecha_inicio;
+      if (finEl._flatpickr)    finEl._flatpickr.setDate(t.fecha_fin, true);       else finEl.value = t.fecha_fin;
+    } else {
+      if (inicioEl._flatpickr) inicioEl._flatpickr.clear(); else inicioEl.value = '';
+      if (finEl._flatpickr)    finEl._flatpickr.clear();    else finEl.value = '';
+    }
+  });
+}
+
+async function guardarTrimestres() {
+  const gestion = document.getElementById('cfgGestion').value.trim() || String(new Date().getFullYear());
+  const nombresTrim = ['1er Trimestre', '2do Trimestre', '3er Trimestre'];
+
+  const btn = document.getElementById('btnGuardarTrimestres');
+  btn.disabled = true;
+  btn.textContent = '⏳ Guardando…';
+
+  for (let i = 1; i <= 3; i++) {
+    const nombre = nombresTrim[i - 1];
+    const inicio = document.getElementById(`trim${i}Inicio`).value;
+    const fin    = document.getElementById(`trim${i}Fin`).value;
+    if (!inicio || !fin) continue; // se puede dejar alguno vacío por ahora
+
+    const existente = (App.trimestres || []).find(t => t.nombre === nombre);
+    const res = await post('guardar.php', {
+      accion: 'guardar_trimestre',
+      id: existente ? existente.id : 0,
+      nombre, gestion,
+      fecha_inicio: inicio,
+      fecha_fin: fin,
+    });
+    if (!res.ok) {
+      btn.disabled = false;
+      btn.textContent = '💾 Guardar trimestres';
+      return toast('Error', res.msg, 'error');
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar trimestres';
+  toast('Guardado', 'Trimestres actualizados', 'success');
+  cargarConfiguracion(); // refresca los ids por si eran nuevos
 }
 
 function previewEscudo(event) {
