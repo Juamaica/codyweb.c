@@ -527,3 +527,53 @@ async function importarExcelSupabase(file) {
   return { ok: true, msg: `Importación completada: ${insertados} estudiante(s) registrado(s)`, insertados, errores };
 }
 
+/* ══════════════════════════════════════════════════════════════
+   EXPORTAR CSV (del lado del navegador, ya no en el servidor)
+═══════════════════════════════════════════════════════════════ */
+function _descargarCSV(nombreArchivo, encabezados, filas) {
+  const BOM = '\uFEFF';
+  const csv = BOM + [encabezados, ...filas]
+    .map(fila => fila.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = nombreArchivo;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+async function exportarAsistenciasCSV(fecha, cursoId) {
+  const params = new URLSearchParams({ accion: 'asistencias' });
+  if (fecha) params.set('fecha', fecha);
+  if (cursoId) params.set('curso_id', cursoId);
+  const res = await get('listar.php?' + params.toString());
+  const filas = (res.data || []).map(a => [
+    a.codigo, a.nombre, a.apellido, a.curso_nombre, a.fecha, a.hora_entrada, a.hora_salida, a.estado, a.observacion,
+  ]);
+  _descargarCSV(`asistencias_${fecha || 'reporte'}.csv`,
+    ['Código', 'Nombre', 'Apellido', 'Curso', 'Fecha', 'Entrada', 'Salida', 'Estado', 'Observación'], filas);
+}
+
+async function exportarReporteCSV(mes, anio, cursoId) {
+  const params = new URLSearchParams({ accion: 'reporte_mensual', mes, anio });
+  if (cursoId) params.set('curso_id', cursoId);
+  const res = await get('listar.php?' + params.toString());
+  const filas = (res.data || []).map(e => [
+    e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
+  ]);
+  _descargarCSV(`reporte_${mes}-${anio}.csv`,
+    ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
+}
+
+async function exportarReporteTrimestralCSV(trimestreId, cursoId) {
+  const params = new URLSearchParams({ accion: 'reporte_trimestral', trimestre_id: trimestreId });
+  if (cursoId) params.set('curso_id', cursoId);
+  const res = await get('listar.php?' + params.toString());
+  const filas = (res.data || []).map(e => [
+    e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
+  ]);
+  const nombreTrim = (res.trimestre?.nombre || 'trimestre').replace(/\s+/g, '_');
+  _descargarCSV(`reporte_${nombreTrim}.csv`,
+    ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
+}
