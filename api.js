@@ -19,6 +19,7 @@ function _rangoMes(mes, anio) {
 function _aplanarEstudiante(e) {
   return {
     ...e,
+    apellido: [e.apellido_paterno, e.apellido_materno].filter(Boolean).join(' '),
     curso_nombre: e.cursos ? e.cursos.nombre : '',
   };
 }
@@ -29,7 +30,7 @@ function _aplanarAsistencia(a) {
   return {
     ...a,
     nombre: est.nombre || '',
-    apellido: est.apellido || '',
+    apellido: [est.apellido_paterno, est.apellido_materno].filter(Boolean).join(' '),
     codigo: est.codigo || '',
     curso_nombre: curso.nombre || '',
     turno: curso.turno || '',
@@ -66,7 +67,7 @@ async function get(url) {
         if (estado !== 'todos') q = q.eq('estado', estado);
         if (cursoId) q = q.eq('curso_id', cursoId);
 
-        const { data, error } = await q.order('apellido');
+        const { data, error } = await q.order('apellido_paterno');
         if (error) throw error;
 
         let lista = (data || []).map(_aplanarEstudiante);
@@ -100,7 +101,7 @@ async function get(url) {
         const turno  = params.get('turno');
         const estId  = params.get('estudiante_id');
 
-        let q = sb.from('asistencias').select('*, estudiantes(nombre,apellido,codigo,curso_id,cursos(nombre,turno))');
+        let q = sb.from('asistencias').select('*, estudiantes(nombre,apellido_paterno,apellido_materno,codigo,curso_id,cursos(nombre,turno))');
 
         if (mes) {
           const { inicio, fin } = _rangoMes(mes, anio);
@@ -198,6 +199,52 @@ async function get(url) {
         return { ok: true, data: cfg };
       }
 
+      case 'trimestres': {
+        const gestion = params.get('gestion');
+        let q = sb.from('trimestres').select('*').order('fecha_inicio');
+        if (gestion) q = q.eq('gestion', gestion);
+        const { data, error } = await q;
+        if (error) throw error;
+        return { ok: true, data: data || [] };
+      }
+
+      case 'reporte_trimestral': {
+        const trimestreId = params.get('trimestre_id');
+        const cursoId = params.get('curso_id');
+
+        const { data: trimestre, error: eT } = await sb.from('trimestres')
+          .select('*').eq('id', trimestreId).maybeSingle();
+        if (eT) throw eT;
+        if (!trimestre) return { ok: false, msg: 'Trimestre no encontrado' };
+
+        let qEst = sb.from('estudiantes').select('*, cursos(nombre)').eq('estado', 'Activo');
+        if (cursoId) qEst = qEst.eq('curso_id', cursoId);
+        const { data: estudiantes, error: e1 } = await qEst;
+        if (e1) throw e1;
+
+        const { data: asist, error: e2 } = await sb.from('asistencias')
+          .select('estudiante_id, estado')
+          .gte('fecha', trimestre.fecha_inicio)
+          .lte('fecha', trimestre.fecha_fin);
+        if (e2) throw e2;
+
+        const data = (estudiantes || []).map(e => {
+          const regs = (asist || []).filter(a => a.estudiante_id === e.id);
+          const presentes    = regs.filter(a => a.estado === 'Presente').length;
+          const tardanzas    = regs.filter(a => a.estado === 'Tarde').length;
+          const ausentes     = regs.filter(a => a.estado === 'Ausente').length;
+          const justificados = regs.filter(a => a.estado === 'Justificado').length;
+          return {
+            codigo: e.codigo, nombre: e.nombre, apellido: e.apellido,
+            curso: e.cursos ? e.cursos.nombre : '',
+            dias_registrados: regs.length,
+            presentes, tardanzas, ausentes, justificados,
+          };
+        }).sort((a, b) => (a.curso + a.apellido).localeCompare(b.curso + b.apellido));
+
+        return { ok: true, data, trimestre };
+      }
+
       default:
         return { ok: false, msg: 'Acción no reconocida' };
     }
@@ -258,16 +305,18 @@ async function post(url, data) {
 
       case 'guardar_estudiante': {
         const id = parseInt(data.id) || 0;
-        const { nombre, apellido, ci, curso_id, genero, telefono, email, estado } = data;
+        const { nombre, apellido_paterno, apellido_materno, ci, curso_id, sexo, telefono, email, estado, repitente } = data;
 
-        if (!nombre || !apellido || !curso_id) {
-          return { ok: false, msg: 'Nombre, apellido y curso son obligatorios' };
+        if (!nombre || !apellido_paterno || !curso_id) {
+          return { ok: false, msg: 'Nombres, apellido paterno y curso son obligatorios' };
         }
 
         if (id > 0) {
           const { error } = await sb.from('estudiantes').update({
-            nombre, apellido, ci, curso_id: parseInt(curso_id), genero,
+            nombre, apellido_paterno, apellido_materno: apellido_materno || null,
+            ci, curso_id: parseInt(curso_id), sexo,
             telefono_tutor: telefono, email, estado: estado || 'Activo',
+            repitente: !!repitente,
           }).eq('id', id);
           if (error) throw error;
           return { ok: true, msg: 'Estudiante actualizado', id };
@@ -278,8 +327,10 @@ async function post(url, data) {
           const token = crypto.randomUUID();
 
           const { data: nuevo, error } = await sb.from('estudiantes').insert({
-            nombre, apellido, ci, curso_id: parseInt(curso_id), genero,
+            nombre, apellido_paterno, apellido_materno: apellido_materno || null,
+            ci, curso_id: parseInt(curso_id), sexo,
             telefono_tutor: telefono, email, qr_token: token, estado: 'Activo',
+            repitente: !!repitente,
           }).select().single();
 
           if (error) throw error;
@@ -316,6 +367,26 @@ async function post(url, data) {
           if (error) throw error;
         }
         return { ok: true, msg: 'Configuración guardada' };
+      }
+
+      case 'guardar_trimestre': {
+        const { nombre, gestion, fecha_inicio, fecha_fin } = data;
+        const id = parseInt(data.id) || 0;
+
+        if (!nombre || !gestion || !fecha_inicio || !fecha_fin) {
+          return { ok: false, msg: 'Nombre, gestión y ambas fechas son obligatorios' };
+        }
+
+        if (id > 0) {
+          const { error } = await sb.from('trimestres')
+            .update({ nombre, gestion, fecha_inicio, fecha_fin }).eq('id', id);
+          if (error) throw error;
+        } else {
+          const { error } = await sb.from('trimestres')
+            .insert({ nombre, gestion, fecha_inicio, fecha_fin });
+          if (error) throw error;
+        }
+        return { ok: true, msg: 'Trimestre guardado' };
       }
 
       default:
@@ -430,20 +501,21 @@ async function importarExcelSupabase(file) {
 
   for (let i = 1; i < filas.length; i++) { // saltar encabezado
     const cols = filas[i].split(',').map(c => c.trim());
-    if (cols.length < 5) { errores.push(`Fila ${i + 1}: columnas insuficientes`); continue; }
+    if (cols.length < 6) { errores.push(`Fila ${i + 1}: columnas insuficientes`); continue; }
 
-    const [codigoIn, nombre, apellido, ci, cursoNombre, generoIn] = cols;
-    if (!nombre || !apellido) { errores.push(`Fila ${i + 1}: nombre o apellido vacío`); continue; }
+    const [codigoIn, apellidoPaterno, apellidoMaterno, nombre, ci, cursoNombre, sexoIn] = cols;
+    if (!nombre || !apellidoPaterno) { errores.push(`Fila ${i + 1}: nombre o apellido paterno vacío`); continue; }
 
     const curso = (cursos || []).find(c => c.nombre.toLowerCase().includes(cursoNombre.toLowerCase()));
     if (!curso) { errores.push(`Fila ${i + 1}: curso '${cursoNombre}' no encontrado`); continue; }
 
-    const genero = ['M', 'F'].includes((generoIn || 'M').toUpperCase()[0]) ? (generoIn || 'M').toUpperCase()[0] : 'M';
-    const token  = crypto.randomUUID();
+    const sexo  = ['V', 'M'].includes((sexoIn || 'V').toUpperCase()[0]) ? (sexoIn || 'V').toUpperCase()[0] : 'V';
+    const token = crypto.randomUUID();
 
     // Si el CSV trae un código, se usa ese; si no, Supabase genera uno automáticamente
     const registro = {
-      nombre, apellido, ci, curso_id: curso.id, genero, qr_token: token, estado: 'Activo',
+      nombre, apellido_paterno: apellidoPaterno, apellido_materno: apellidoMaterno || null,
+      ci, curso_id: curso.id, sexo, qr_token: token, estado: 'Activo',
     };
     if (codigoIn) registro.codigo = codigoIn;
 
@@ -491,5 +563,17 @@ async function exportarReporteCSV(mes, anio, cursoId) {
     e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
   ]);
   _descargarCSV(`reporte_${mes}-${anio}.csv`,
+    ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
+}
+
+async function exportarReporteTrimestralCSV(trimestreId, cursoId) {
+  const params = new URLSearchParams({ accion: 'reporte_trimestral', trimestre_id: trimestreId });
+  if (cursoId) params.set('curso_id', cursoId);
+  const res = await get('listar.php?' + params.toString());
+  const filas = (res.data || []).map(e => [
+    e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
+  ]);
+  const nombreTrim = (res.trimestre?.nombre || 'trimestre').replace(/\s+/g, '_');
+  _descargarCSV(`reporte_${nombreTrim}.csv`,
     ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
 }
