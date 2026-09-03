@@ -334,13 +334,14 @@
                 <th>Nombre completo</th>
                 <th>Curso</th>
                 <th>CI</th>
-                <th>Género</th>
+                <th>Sexo</th>
+                <th>Repitente</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="bodyEstudiantes">
-              <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">Cargando...</td></tr>
+              <tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-muted);">Cargando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -573,8 +574,12 @@
     ─────────────────────────────────────────────────────────── -->
     <section class="page" id="page-reportes">
       <div class="section-header">
-        <div class="section-title">Reportes <small>Análisis mensual</small></div>
+        <div class="section-title">Reportes <small>Análisis por periodo</small></div>
         <div class="toolbar">
+          <select class="form-control" id="repPeriodoTipo" onchange="cambiarTipoPeriodoReporte()" style="width:auto;">
+            <option value="mes">Por mes</option>
+            <option value="trimestre">Por trimestre</option>
+          </select>
           <select class="form-control" id="repMes" style="width:auto;">
             <option value="1">Enero</option><option value="2">Febrero</option>
             <option value="3">Marzo</option><option value="4">Abril</option>
@@ -585,6 +590,9 @@
           </select>
           <select class="form-control" id="repAnio" style="width:auto;">
             <option>2026</option><option>2025</option><option>2024</option>
+          </select>
+          <select class="form-control" id="repTrimestre" style="width:auto;display:none;">
+            <option value="">Selecciona trimestre...</option>
           </select>
           <select class="form-control" id="repCurso" style="min-width:180px;">
             <option value="">Todos los cursos</option>
@@ -683,6 +691,38 @@
           </div>
         </div>
         <div class="card" style="grid-column:1/-1;">
+          <div class="card-header"><span class="card-title">📅 Trimestres</span></div>
+          <div class="card-body">
+            <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:16px;">
+              Define las fechas de cada trimestre de la gestión <strong id="trimGestionLabel">2026</strong>. Los reportes trimestrales usarán estos rangos.
+            </p>
+
+            <div style="margin-bottom:16px;">
+              <label class="form-label">1er Trimestre</label>
+              <div class="form-row" style="grid-template-columns:1fr 1fr;">
+                <input class="form-control flatpickr-date" type="text" id="trim1Inicio" placeholder="Fecha inicio">
+                <input class="form-control flatpickr-date" type="text" id="trim1Fin" placeholder="Fecha fin">
+              </div>
+            </div>
+            <div style="margin-bottom:16px;">
+              <label class="form-label">2do Trimestre</label>
+              <div class="form-row" style="grid-template-columns:1fr 1fr;">
+                <input class="form-control flatpickr-date" type="text" id="trim2Inicio" placeholder="Fecha inicio">
+                <input class="form-control flatpickr-date" type="text" id="trim2Fin" placeholder="Fecha fin">
+              </div>
+            </div>
+            <div style="margin-bottom:6px;">
+              <label class="form-label">3er Trimestre</label>
+              <div class="form-row" style="grid-template-columns:1fr 1fr;">
+                <input class="form-control flatpickr-date" type="text" id="trim3Inicio" placeholder="Fecha inicio">
+                <input class="form-control flatpickr-date" type="text" id="trim3Fin" placeholder="Fecha fin">
+              </div>
+            </div>
+
+            <button class="btn btn-gold" id="btnGuardarTrimestres" style="margin-top:10px;" onclick="guardarTrimestres()">💾 Guardar trimestres</button>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1/-1;">
           <div class="card-header"><span class="card-title">📚 Cursos registrados</span></div>
           <div class="card-body">
             <div class="toolbar" style="margin-bottom:14px;">
@@ -727,31 +767,43 @@
       <input type="hidden" id="estId">
       <div class="form-row">
         <div class="form-group" data-icon="👤">
-          <label class="form-label">Nombre *</label>
+          <label class="form-label">Nombres *</label>
           <input class="form-control" type="text" id="estNombre" placeholder="Ej: Ana María">
         </div>
         <div class="form-group" data-icon="👤">
-          <label class="form-label">Apellido *</label>
-          <input class="form-control" type="text" id="estApellido" placeholder="Ej: Flores Mamani">
+          <label class="form-label">Apellido Paterno *</label>
+          <input class="form-control" type="text" id="estApellidoPaterno" placeholder="Ej: Flores">
         </div>
       </div>
       <div class="form-row">
+        <div class="form-group" data-icon="👤">
+          <label class="form-label">Apellido Materno</label>
+          <input class="form-control" type="text" id="estApellidoMaterno" placeholder="Ej: Mamani">
+        </div>
         <div class="form-group" data-icon="🪪">
           <label class="form-label">CI / Carnet</label>
           <input class="form-control" type="text" id="estCI" placeholder="Ej: 12345678">
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">Curso *</label>
           <select class="form-control" id="estCurso"></select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Sexo</label>
+          <select class="form-control" id="estSexo">
+            <option value="V">Varón</option>
+            <option value="M">Mujer</option>
+          </select>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Género</label>
-          <select class="form-control" id="estGenero">
-            <option value="M">Masculino</option>
-            <option value="F">Femenino</option>
-            <option value="Otro">Otro</option>
+          <label class="form-label">¿Repitente?</label>
+          <select class="form-control" id="estRepitente">
+            <option value="No">No</option>
+            <option value="Si">Sí</option>
           </select>
         </div>
         <div class="form-group" data-icon="📞">
@@ -794,9 +846,9 @@
         <div class="card-body" style="padding:14px;">
           <p style="font-size:.82rem;font-weight:600;color:var(--navy);margin-bottom:8px;">📋 Formato requerido (columnas en orden):</p>
           <div style="background:var(--surface);border-radius:8px;padding:10px;font-family:monospace;font-size:.78rem;color:var(--text-muted);">
-            Código, Nombre, Apellido, CI, Curso, Género<br>
-            EST-001, Ana, Flores, 12345, 1ro A Secundaria, F<br>
-            EST-002, Carlos, Quispe, 23456, 2do B Secundaria, M
+            Código, Apellido Paterno, Apellido Materno, Nombres, CI, Curso, Sexo<br>
+            EST-001, Flores, Mamani, Ana, 12345, 1ro A Secundaria, M<br>
+            EST-002, Quispe, Rojas, Carlos, 23456, 2do B Secundaria, V
           </div>
         </div>
       </div>
