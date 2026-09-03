@@ -1061,6 +1061,9 @@ function dibujarGraficasReporte(data) {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   EXPORTAR REPORTE (Excel real con ExcelJS — días agrupados por mes)
+═══════════════════════════════════════════════════════════════ */
 function exportarReporte() {
   const tipo  = document.getElementById('repPeriodoTipo')?.value || 'mes';
   const curso = document.getElementById('repCurso')?.value || '';
@@ -1068,13 +1071,13 @@ function exportarReporte() {
   if (tipo === 'trimestre') {
     const trimId = document.getElementById('repTrimestre').value;
     if (!trimId) return toast('Selecciona un trimestre', '', 'warn');
-    exportarReporteTrimestralCSV(trimId, curso);
+    exportarReporteExcelDetallado({ tipo: 'trimestre', trimestreId: trimId, cursoId: curso });
   } else {
     const mes  = document.getElementById('repMes')?.value  || '';
-    const anio = document.getElementById('repAnio')?.value || '';
-    exportarReporteCSV(mes, anio, curso);
+    const anio = document.getElementById('repAnio')?.value || new Date().getFullYear();
+    exportarReporteExcelDetallado({ tipo: 'mes', mes, anio, cursoId: curso });
   }
-  toast('Exportando', 'Descarga iniciada', 'success');
+  toast('Generando Excel', 'Descarga iniciada', 'success');
 }
 
 /* ══════════════════════════════════════════════════════════════
