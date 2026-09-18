@@ -193,7 +193,7 @@ body {
 
 /* Top bar */
 .topbar {
-  background: var (--white);
+  background: #fde68a;
   padding: 0 28px;
   height: 64px;
   display: flex; align-items: center; justify-content: space-between;
