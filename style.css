@@ -1,7 +1,7 @@
 /* ============================================================
    CODYWEB.COM — style.css
    U.E. Juana Azurduy de Padilla
-   Paleta: Azul marino #0A1628 | Azul medio #1E3A5F | Dorado #C9A227
+   Paleta: Azul marino #0A1628 | Azul medio #1E3A5F | Celeste #27a9c9
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -80,7 +80,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   padding: 5px;
-  box-shadow: 0 4px 14px rgba(0,0,0,.25), 0 0 0 3px rgba(201,162,39,.35);
+  box-shadow: 0 4px 14px rgba(0,0,0,.25), 0 0 0 3px rgba(39,169,201,.35);
 }
 .sidebar-logo img {
   width: 100%; height: 100%;
@@ -121,7 +121,7 @@ body {
 }
 .nav-label {
   font-size: .63rem; font-weight: 700; letter-spacing: 1.2px;
-  color: rgba(27, 11, 240, 0.4); text-transform: uppercase;
+  color: rgba(255,255,255,.4); text-transform: uppercase;
   padding: 16px 10px 6px;
 }
 .nav-item {
@@ -141,10 +141,10 @@ body {
   transform: translateX(3px);
 }
 .nav-item.active {
-  background: linear-gradient(90deg, var(--gold) 0%, #B8920F 100%);
+  background: linear-gradient(90deg, var(--gold) 0%, #1d8aa6 100%);
   color: var(--navy);
   font-weight: 700;
-  box-shadow: 0 4px 16px rgba(201,162,39,.3);
+  box-shadow: 0 4px 16px rgba(39,169,201,.3);
 }
 .nav-item .nav-icon {
   font-size: 1.1rem;
@@ -174,7 +174,7 @@ body {
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid rgba(255,255,255,.07);
-  font-size: .72rem; color: rgba(232,197,71,.45);
+  font-size: .72rem; color: rgba(30,200,238,.45);
   text-align: center;
 }
 
@@ -193,7 +193,7 @@ body {
 
 /* Top bar */
 .topbar {
-  background: #fde68a
+  background: var(--white);
   padding: 0 28px;
   height: 64px;
   display: flex; align-items: center; justify-content: space-between;
@@ -416,7 +416,7 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
   background: var(--gold); color: var(--navy);
   border-color: var(--gold);
 }
-.btn-gold:hover { background: var(--gold-light); box-shadow: 0 6px 16px rgba(201,162,39,.4); }
+.btn-gold:hover { background: var(--gold-light); box-shadow: 0 6px 16px rgba(39,169,201,.4); }
 
 .btn-success { background: var(--green); color: #fff; border-color: var(--green); }
 .btn-success:hover { background: #16A34A; box-shadow: 0 6px 16px rgba(34,197,94,.35); }
@@ -424,7 +424,7 @@ tbody td { padding: 11px 14px; vertical-align: middle; }
 .btn-danger  { background: var(--red);  color: #fff; border-color: var(--red); }
 .btn-danger:hover  { background: #DC2626; box-shadow: 0 6px 16px rgba(239,68,68,.35); }
 
-.btn-warning:hover { background: #FCEFC7; border-color: var(--gold); box-shadow: 0 6px 16px rgba(201,162,39,.25); }
+.btn-warning:hover { background: #FCEFC7; border-color: var(--gold); box-shadow: 0 6px 16px rgba(39,169,201,.25); }
 
 .btn-outline {
   background: transparent; color: var(--navy-mid);
@@ -659,8 +659,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   animation: scan-pulse 2s infinite;
 }
 @keyframes scan-pulse {
-  0%,100% { border-color: var(--gold); box-shadow: 0 0 0 9999px rgba(0,0,0,.4), 0 0 20px rgba(201,162,39,.3); }
-  50%      { border-color: var(--gold-light); box-shadow: 0 0 0 9999px rgba(0,0,0,.4), 0 0 30px rgba(232,197,71,.5); }
+  0%,100% { border-color: var(--gold); box-shadow: 0 0 0 9999px rgba(0,0,0,.4), 0 0 20px rgba(39,169,201,.3); }
+  50%      { border-color: var(--gold-light); box-shadow: 0 0 0 9999px rgba(0,0,0,.4), 0 0 30px rgba(30,200,238,.5); }
 }
 .scanner-status {
   position: absolute; bottom: 0; left: 0; right: 0;
@@ -917,6 +917,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Tabla acción */
 .actions-cell { display: flex; gap: 6px; }
+
 /* ═══════════════════════════════════════════════════════════
    LOGIN / REGISTRO
    ═══════════════════════════════════════════════════════════ */
@@ -942,7 +943,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 .login-body::before {
   width: 420px; height: 420px;
-  background: radial-gradient(circle, rgba(201,162,39,.35), transparent 70%);
+  background: radial-gradient(circle, rgba(39,169,201,.35), transparent 70%);
   top: -140px; right: -120px;
 }
 .login-body::after {
@@ -984,7 +985,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 8px;
   border-radius: 50%;
   background: var(--white);
-  box-shadow: 0 0 0 3px var(--surface-2), 0 0 0 6px rgba(201,162,39,.35), 0 8px 24px rgba(10,22,40,.15);
+  box-shadow: 0 0 0 3px var(--surface-2), 0 0 0 6px rgba(39,169,201,.35), 0 8px 24px rgba(10,22,40,.15);
 }
 .login-logo-sm img { width: 78px; height: 78px; padding: 6px; }
 
@@ -1053,7 +1054,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .login-msg-error { background: #FEE2E2; color: #B91C1C; }
 .login-msg-ok { background: #DCFCE7; color: #15803D; }
 
-.login-footer { margin-top: 20px; font-size: .75rem; color: rgba(232,197,71,.55); }
+.login-footer { margin-top: 20px; font-size: .75rem; color: rgba(30,200,238,.55); }
 
 /* ═══════════════════════════════════════════════════════════
    CUSTOM SELECT (reemplazo del <select> nativo)
@@ -1109,7 +1110,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 .custom-select-option:hover { background: rgba(255,255,255,.08); color: #fff; }
 .custom-select-option.selected {
-  background: linear-gradient(90deg, var(--gold) 0%, #B8920F 100%);
+  background: linear-gradient(90deg, var(--gold) 0%, #1d8aa6 100%);
   color: var(--navy); font-weight: 700;
 }
 .custom-select-empty {
@@ -1323,13 +1324,13 @@ span.flatpickr-weekday {
   border: none;
   font-size: 1.3rem; font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 8px 22px rgba(201,162,39,.45);
+  box-shadow: 0 8px 22px rgba(39,169,201,.45);
   z-index: 300;
   transition: transform var(--trans), box-shadow var(--trans);
 }
 .btn-help-float:hover {
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 12px 28px rgba(201,162,39,.55);
+  box-shadow: 0 12px 28px rgba(39,169,201,.55);
 }
 
 @media (max-width: 480px) {
