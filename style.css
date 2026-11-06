@@ -11,8 +11,8 @@
   --navy:       #0A1628;
   --navy-mid:   #1E3A5F;
   --navy-light: #2D5282;
-  --gold:       #C9A227;
-  --gold-light: #E8C547;
+  --gold:       #27a9c9;
+  --gold-light: #1ec8ee;
   --white:      #FFFFFF;
   --surface:    #F0F4F8;
   --surface-2:  #E2EAF4;
@@ -121,7 +121,7 @@ body {
 }
 .nav-label {
   font-size: .63rem; font-weight: 700; letter-spacing: 1.2px;
-  color: rgba(232,197,71,.4); text-transform: uppercase;
+  color: rgba(27, 11, 240, 0.4); text-transform: uppercase;
   padding: 16px 10px 6px;
 }
 .nav-item {
@@ -193,7 +193,7 @@ body {
 
 /* Top bar */
 .topbar {
-  background: var(--white);
+  background: #fde68a
   padding: 0 28px;
   height: 64px;
   display: flex; align-items: center; justify-content: space-between;

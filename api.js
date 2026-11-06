@@ -171,8 +171,9 @@ async function get(url) {
           const tardanzas    = regs.filter(a => a.estado === 'Tarde').length;
           const ausentes     = regs.filter(a => a.estado === 'Ausente').length;
           const justificados = regs.filter(a => a.estado === 'Justificado').length;
+          const apellido = [e.apellido_paterno, e.apellido_materno].filter(Boolean).join(' ');
           return {
-            codigo: e.codigo, nombre: e.nombre, apellido: e.apellido,
+            codigo: e.codigo, nombre: e.nombre, apellido,
             curso: e.cursos ? e.cursos.nombre : '',
             dias_registrados: regs.length,
             presentes, tardanzas, ausentes, justificados,
@@ -234,8 +235,9 @@ async function get(url) {
           const tardanzas    = regs.filter(a => a.estado === 'Tarde').length;
           const ausentes     = regs.filter(a => a.estado === 'Ausente').length;
           const justificados = regs.filter(a => a.estado === 'Justificado').length;
+          const apellido = [e.apellido_paterno, e.apellido_materno].filter(Boolean).join(' ');
           return {
-            codigo: e.codigo, nombre: e.nombre, apellido: e.apellido,
+            codigo: e.codigo, nombre: e.nombre, apellido,
             curso: e.cursos ? e.cursos.nombre : '',
             dias_registrados: regs.length,
             presentes, tardanzas, ausentes, justificados,
@@ -528,19 +530,34 @@ async function importarExcelSupabase(file) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EXPORTAR CSV (del lado del navegador, ya no en el servidor)
+   EXPORTAR A EXCEL (.xlsx) — se genera en el navegador con SheetJS
+   Requiere en index.html (antes de api.js):
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 ═══════════════════════════════════════════════════════════════ */
-function _descargarCSV(nombreArchivo, encabezados, filas) {
-  const BOM = '\uFEFF';
-  const csv = BOM + [encabezados, ...filas]
-    .map(fila => fila.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\r\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = nombreArchivo;
-  a.click();
-  URL.revokeObjectURL(a.href);
+function _descargarExcel(nombreArchivo, nombreHoja, encabezados, filas) {
+  if (typeof XLSX === 'undefined') {
+    toast('Error', 'No se cargó la librería de Excel. Recarga la página.', 'error');
+    return;
+  }
+  const hoja = XLSX.utils.aoa_to_sheet([encabezados, ...filas]);
+  // Ancho de cada columna según su contenido
+  hoja['!cols'] = encabezados.map((h, i) => {
+    const maxFila = filas.reduce((m, f) => Math.max(m, String(f[i] ?? '').length), 0);
+    return { wch: Math.max(String(h).length, maxFila) + 2 };
+  });
+  const libro = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(libro, hoja, nombreHoja);
+  XLSX.writeFile(libro, nombreArchivo);
+}
+
+const _ENCABEZADO_REPORTE = ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'];
+
+function _filasReporte(datos) {
+  return datos.map(e => [
+    e.codigo, e.nombre, e.apellido, e.curso,
+    Number(e.dias_registrados || 0), Number(e.presentes || 0), Number(e.tardanzas || 0),
+    Number(e.ausentes || 0), Number(e.justificados || 0),
+  ]);
 }
 
 async function exportarAsistenciasCSV(fecha, cursoId) {
@@ -549,9 +566,9 @@ async function exportarAsistenciasCSV(fecha, cursoId) {
   if (cursoId) params.set('curso_id', cursoId);
   const res = await get('listar.php?' + params.toString());
   const filas = (res.data || []).map(a => [
-    a.codigo, a.nombre, a.apellido, a.curso_nombre, a.fecha, a.hora_entrada, a.hora_salida, a.estado, a.observacion,
+    a.codigo, a.nombre, a.apellido, a.curso_nombre, a.fecha, a.hora_entrada || '', a.hora_salida || '', a.estado, a.observacion || '',
   ]);
-  _descargarCSV(`asistencias_${fecha || 'reporte'}.csv`,
+  _descargarExcel(`asistencias_${fecha || 'reporte'}.xlsx`, 'Asistencias',
     ['Código', 'Nombre', 'Apellido', 'Curso', 'Fecha', 'Entrada', 'Salida', 'Estado', 'Observación'], filas);
 }
 
@@ -559,21 +576,15 @@ async function exportarReporteCSV(mes, anio, cursoId) {
   const params = new URLSearchParams({ accion: 'reporte_mensual', mes, anio });
   if (cursoId) params.set('curso_id', cursoId);
   const res = await get('listar.php?' + params.toString());
-  const filas = (res.data || []).map(e => [
-    e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
-  ]);
-  _descargarCSV(`reporte_${mes}-${anio}.csv`,
-    ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
+  _descargarExcel(`reporte_${mes}-${anio}.xlsx`, 'Reporte mensual',
+    _ENCABEZADO_REPORTE, _filasReporte(res.data || []));
 }
 
 async function exportarReporteTrimestralCSV(trimestreId, cursoId) {
   const params = new URLSearchParams({ accion: 'reporte_trimestral', trimestre_id: trimestreId });
   if (cursoId) params.set('curso_id', cursoId);
   const res = await get('listar.php?' + params.toString());
-  const filas = (res.data || []).map(e => [
-    e.codigo, e.nombre, e.apellido, e.curso, e.dias_registrados, e.presentes, e.tardanzas, e.ausentes, e.justificados,
-  ]);
   const nombreTrim = (res.trimestre?.nombre || 'trimestre').replace(/\s+/g, '_');
-  _descargarCSV(`reporte_${nombreTrim}.csv`,
-    ['Código', 'Nombre', 'Apellido', 'Curso', 'Días reg.', 'Presentes', 'Tardanzas', 'Ausentes', 'Justificados'], filas);
+  _descargarExcel(`reporte_${nombreTrim}.xlsx`, 'Reporte trimestral',
+    _ENCABEZADO_REPORTE, _filasReporte(res.data || []));
 }
