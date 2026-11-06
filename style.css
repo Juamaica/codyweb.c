@@ -8,8 +8,8 @@
 
 /* ── Variables ───────────────────────────────────────────── */
 :root {
-  --navy:       #81fc44;
-  --navy-mid:   #1576f4;
+  --navy:       #db0a0a;
+  --navy-mid:   #090c0e;
   --navy-light: #2D5282;
   --gold:       #27a9c9;
   --gold-light: #1ec8ee;
@@ -19,7 +19,7 @@
   --text-main:  #0f0f0f;
   --text-muted: #5A7BA0;
   --border:     #CCDAEB;
-  --green:      #22C55E;
+  --green:      #0b0c0c;
   --red:        #EF4444;
   --orange:     #F97316;
   --blue-soft:  #3B82F6;
