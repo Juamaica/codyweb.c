@@ -25,7 +25,7 @@
   --blue-soft:  #3B82F6;
   --sidebar-w:  270px;
   --radius:     12px;
-  --shadow:     0 4px 24px rgba(10, 22, 40, 0.10);
+  --shadow:     0 4px 24px rgba(189, 21, 9, 0.1);
   --shadow-sm:  0 2px 8px  rgba(10, 22, 40, 0.07);
   --trans:      .22s cubic-bezier(.4,0,.2,1);
 }
